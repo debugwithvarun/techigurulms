@@ -15,7 +15,7 @@ interface CertificateData {
     thumbnail: string | null;
     instructor?: { name: string; title: string; avatar?: string };
 }
-
+// varun 
 // --- HELPER ---
 const getImageUrl = (url: string | null) => {
     if (!url) return 'https://via.placeholder.com/640x360?text=No+Cover';
