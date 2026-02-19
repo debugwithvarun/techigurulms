@@ -40,7 +40,7 @@ interface CertificateData {
 const getImageUrl = (url: string) => {
     if (!url) return 'https://via.placeholder.com/150?text=No+Image';
     if (url.startsWith('/uploads') || url.startsWith('\\uploads')) {
-        return `https://13.127.138.86${url.replace(/\\/g, '/')}`;
+        return `https://13.127.138.86:5000${url.replace(/\\/g, '/')}`;
     }
     return url;
 };
@@ -839,9 +839,13 @@ const TutorDashboard: React.FC = () => {
   };
 
   useEffect(() => { 
-      if(!authLoading && (!user || user.role !== 'instructor')) { 
-          // Handle Redirect logic if needed 
-      } 
+      if(!authLoading) {
+          if (!user) {
+              navigate('/login');
+          } else if (user.role !== 'instructor') {
+              navigate('/'); // Redirect to home if they are a student
+          }
+      }
   }, [user, authLoading, navigate]);
 
   useEffect(() => { 
@@ -956,6 +960,9 @@ const TutorDashboard: React.FC = () => {
 
   if(authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader className="animate-spin text-violet-600"/></div>;
 
+  // Prevent rendering the dashboard while the redirect is happening
+  if (!user || user.role !== 'instructor') return null; 
+
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] font-sans text-slate-600 selection:bg-violet-200 selection:text-violet-900">
       <Sidebar 
@@ -1013,3 +1020,6 @@ const TutorDashboard: React.FC = () => {
 };
 
 export default TutorDashboard;
+
+
+// check that it work correctly

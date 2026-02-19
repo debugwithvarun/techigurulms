@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Mail, Lock, Eye, EyeOff, ArrowRight, LogIn, AlertCircle 
+  Mail, Lock, Eye, EyeOff, ArrowRight, LogIn, AlertCircle, GraduationCap, Briefcase 
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext'; // Import Auth Context
 
 // 1. Define Interfaces
@@ -20,8 +20,13 @@ interface FormErrors {
 const Login: React.FC = () => {
   const { login } = useAuth(); // Get login function from Context
   const navigate = useNavigate();
+  
+  // 2. Read Role from URL Parameters
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role') || 'student'; // Default to student
+  const displayRole = role.charAt(0).toUpperCase() + role.slice(1);
 
-  // 2. Typed State
+  // 3. Typed State
   const [formData, setFormData] = useState<LoginData>({
     email: '',
     password: '',
@@ -32,7 +37,7 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // 3. Handle Input Change
+  // 4. Handle Input Change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -51,7 +56,7 @@ const Login: React.FC = () => {
     }
   };
 
-  // 4. Validation Logic
+  // 5. Validation Logic
   const validate = (): boolean => {
     let newErrors: FormErrors = {};
 
@@ -69,21 +74,25 @@ const Login: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // 5. Submit Handler (Integrated)
+  // 6. Submit Handler
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (validate()) {
       setIsSubmitting(true);
       
-      // Call the backend via Context
-      const result = await login(formData.email, formData.password);
+      // Pass the role to the backend via Context
+      const result = await login(formData.email, formData.password, role);
       
       setIsSubmitting(false);
 
       if (result.success) {
-        // Redirect to Dashboard or Home
-        navigate('/'); 
+        // --- REDIRECT LOGIC ---
+        if (role === 'instructor') {
+          navigate('/dashboard'); // Instructors go to dashboard
+        } else {
+          navigate('/'); // Students go to home page
+        }
       } else {
         // Set API Error to display in UI
         setErrors({ api: result.message });
@@ -101,16 +110,16 @@ const Login: React.FC = () => {
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -translate-x-1/3 translate-y-1/3"></div>
 
         {/* Logo */}
-          <Link to="/">
-        <div className="relative z-10 flex items-center gap-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
+        <Link to="/">
+          <div className="relative z-10 flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <span className="text-2xl font-bold text-white tracking-tight">TechiGuru</span>
           </div>
-          <span className="text-2xl font-bold text-white tracking-tight">TechiGuru</span>
-        </div>
-          </Link>
+        </Link>
 
         {/* Testimonial */}
         <div className="relative z-10 max-w-md">
@@ -151,8 +160,16 @@ const Login: React.FC = () => {
             <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-6 lg:hidden">
                <LogIn size={24} />
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Welcome Back</h1>
-            <p className="text-slate-500">Please enter your details to sign in.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
+                <h1 className="text-3xl font-extrabold text-slate-900">Welcome Back</h1>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold w-fit ${
+                    role === 'instructor' ? 'bg-slate-900 text-white' : 'bg-purple-100 text-purple-700'
+                }`}>
+                    {role === 'instructor' ? <Briefcase size={12}/> : <GraduationCap size={12}/>}
+                    {displayRole}
+                </span>
+            </div>
+            <p className="text-slate-500">Please enter your details to sign in as a {role}.</p>
           </div>
 
           {/* API Error Alert */}
@@ -220,14 +237,14 @@ const Login: React.FC = () => {
                     type="checkbox"
                     checked={formData.rememberMe}
                     onChange={handleChange}
-                    className="w-4 h-4 border-slate-300 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                    className={`w-4 h-4 border-slate-300 rounded focus:ring-purple-500 cursor-pointer ${role === 'instructor' ? 'text-slate-900' : 'text-purple-600'}`}
                   />
                 </div>
                 <label htmlFor="rememberMe" className="text-sm text-slate-600 cursor-pointer select-none">
                   Remember me
                 </label>
               </div>
-              <a href="#" className="text-sm font-semibold text-purple-600 hover:text-purple-700 hover:underline">
+              <a href="#" className={`text-sm font-semibold hover:underline ${role === 'instructor' ? 'text-slate-800 hover:text-slate-900' : 'text-purple-600 hover:text-purple-700'}`}>
                 Forgot Password?
               </a>
             </div>
@@ -236,7 +253,9 @@ const Login: React.FC = () => {
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full bg-slate-900 text-white font-bold py-4 rounded-lg hover:bg-slate-800 transition-all transform hover:-translate-y-1 shadow-lg shadow-slate-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className={`w-full text-white font-bold py-4 rounded-lg transition-all transform hover:-translate-y-1 shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed ${
+                role === 'instructor' ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-200' : 'bg-purple-600 hover:bg-purple-700 shadow-purple-200'
+              }`}
             >
               {isSubmitting ? (
                 <span className="animate-pulse">Signing in...</span>
@@ -248,9 +267,9 @@ const Login: React.FC = () => {
             </button>
           </form>
 
-          {/* Footer Link */}
+          {/* Footer Link - Preserves Role */}
           <p className="text-center text-slate-500 mt-8 text-sm">
-            Don't have an account? <Link to="/signup" className="text-purple-600 font-bold hover:underline">Sign up</Link>
+            Don't have an account? <Link to={`/signup?role=${role}`} className={`font-bold hover:underline ${role === 'instructor' ? 'text-slate-800' : 'text-purple-600'}`}>Sign up</Link>
           </p>
 
         </motion.div>

@@ -3,13 +3,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Search, ShoppingCart, ChevronDown, ChevronRight, 
   LogIn, Menu, X, Globe, BookOpen, Smartphone, PlayCircle, PauseCircle,
-  LayoutDashboard, LogOut, User, Award // Added Award icon here
+  LayoutDashboard, LogOut, User, Award, GraduationCap, Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext'; // Integration
+import { useAuth } from '../context/AuthContext'; 
 
 const Navbar = () => {
-  const { user, logout } = useAuth(); // Get real user state
+  const { user, logout } = useAuth(); 
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,7 +17,11 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false); // For user profile dropdown
+  const [profileOpen, setProfileOpen] = useState(false); 
+  
+  // New states for Auth dropdowns
+  const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
+  const [signupDropdownOpen, setSignupDropdownOpen] = useState(false);
 
   const hideNavbarPaths = ['/login', '/signup'];
 
@@ -56,7 +60,6 @@ const Navbar = () => {
         { title: 'Archived Courses', path: '/inactive-course', icon: <PauseCircle size={16}/> }
       ] 
     },
-    // --- NEW CERTIFICATES LINK ADDED HERE ---
     { 
       name: 'Certificates', 
       hasDropdown: true, 
@@ -65,7 +68,7 @@ const Navbar = () => {
         { title: 'Archived Certificates', path: '/inactive-certificates', icon: <PauseCircle size={16}/> }
       ] 
     },
-    // Only show "Dashboard" link in main nav if user is instructor (optional preference)
+    // 🔥 Dashboard will ONLY render if the logged-in user's role is strictly 'instructor'
     ...(user?.role === 'instructor' ? [{ name: 'Dashboard', path: '/dashboard', hasDropdown: false }] : [])
   ];
 
@@ -174,7 +177,7 @@ const Navbar = () => {
               </button>
             </div>
 
-            {/* Auth State (Real Integration) */}
+            {/* Auth State */}
             {user ? (
               <div className="flex items-center gap-4 pl-4 border-l border-gray-200 relative">
                 
@@ -204,15 +207,18 @@ const Navbar = () => {
                                 <p className="text-xs text-slate-500 truncate">{user.email}</p>
                             </div>
                             
-                            {user.role === 'instructor' && (
+                            {/* 🔥 Securing the Dashboard link in the Profile menu too */}
+                            {user?.role === 'instructor' && (
+                              <>
                                 <Link to="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
                                     <LayoutDashboard size={16}/> Instructor Dashboard
                                 </Link>
+                              <Link to="/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                  <User size={16}/> My Profile
+                              </Link>
+                              </>
                             )}
                             
-                            <Link to="/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
-                                <User size={16}/> My Profile
-                            </Link>
 
                             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-50 mt-1">
                                 <LogOut size={16}/> Sign Out
@@ -223,19 +229,60 @@ const Navbar = () => {
 
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-3">
-                 <Link 
-                   to="/login"
-                   className="text-sm font-semibold text-slate-600 hover:text-purple-600 transition-colors"
-                 >
-                   Log in
-                 </Link>
-                 <Link 
-                   to="/signup"
-                   className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                 >
-                   Sign Up <ChevronRight size={14} />
-                 </Link>
+              <div className="hidden sm:flex items-center gap-4 pl-4 border-l border-gray-200">
+                
+                {/* LOGIN DROPDOWN */}
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setLoginDropdownOpen(true)}
+                  onMouseLeave={() => setLoginDropdownOpen(false)}
+                >
+                  <button className="flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-purple-600 transition-colors py-2">
+                    Log in <ChevronDown size={14} className={`transition-transform ${loginDropdownOpen ? 'rotate-180' : ''}`}/>
+                  </button>
+                  <AnimatePresence>
+                    {loginDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                        className="absolute top-full -left-4 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-2"
+                      >
+                        <Link to="/login?role=student" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                          <GraduationCap size={16} className="text-purple-500"/> As Student
+                        </Link>
+                        <Link to="/login?role=instructor" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                          <Briefcase size={16} className="text-purple-500"/> As Instructor
+                        </Link>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* SIGNUP DROPDOWN */}
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setSignupDropdownOpen(true)}
+                  onMouseLeave={() => setSignupDropdownOpen(false)}
+                >
+                  <button className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-md hover:shadow-lg">
+                    Sign Up <ChevronDown size={14} className={`transition-transform ${signupDropdownOpen ? 'rotate-180' : ''}`}/>
+                  </button>
+                  <AnimatePresence>
+                    {signupDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                        className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-2"
+                      >
+                        <Link to="/signup?role=student" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                          <GraduationCap size={16} className="text-purple-500"/> As Student
+                        </Link>
+                        {/* <Link to="/signup?role=instructor" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                          <Briefcase size={16} className="text-purple-500"/> As Instructor
+                        </Link> */}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
               </div>
             )}
 
@@ -299,12 +346,25 @@ const Navbar = () => {
               <div className="p-6 bg-gray-50 mt-auto space-y-4">
                 {!user ? (
                   <>
-                    <Link to="/login" className="block w-full text-center py-3 rounded-lg border border-gray-200 font-semibold text-slate-600 hover:bg-white transition-colors">
-                      Log In
-                    </Link>
-                    <Link to="/signup" className="block w-full text-center py-3 rounded-lg bg-purple-600 text-white font-semibold shadow-lg shadow-purple-200 hover:bg-purple-700 transition-colors">
-                      Sign Up Free
-                    </Link>
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Log In</p>
+                      <Link to="/login?role=student" className="flex items-center gap-3 w-full py-3 px-4 rounded-lg border border-gray-200 font-semibold text-slate-600 hover:bg-white transition-colors">
+                        <GraduationCap size={18} className="text-purple-500"/> As Student
+                      </Link>
+                      <Link to="/login?role=instructor" className="flex items-center gap-3 w-full py-3 px-4 rounded-lg border border-gray-200 font-semibold text-slate-600 hover:bg-white transition-colors">
+                        <Briefcase size={18} className="text-purple-500"/> As Instructor
+                      </Link>
+                    </div>
+
+                    <div className="space-y-2 pt-4 border-t border-gray-200">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sign Up</p>
+                      <Link to="/signup?role=student" className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-purple-600 text-white font-semibold shadow-md hover:bg-purple-700 transition-colors">
+                        <GraduationCap size={18}/> Student Sign Up
+                      </Link>
+                      {/* <Link to="/signup?role=instructor" className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 transition-colors">
+                        <Briefcase size={18}/> Instructor Sign Up
+                      </Link> */}
+                    </div>
                   </>
                 ) : (
                    <button onClick={handleLogout} className="w-full py-3 rounded-lg border border-red-100 text-red-600 font-semibold bg-red-50 flex items-center justify-center gap-2">

@@ -15,7 +15,7 @@ interface FormData {
   gender: string;
   password: string;
   confirmPassword: string;
-  role: string; // Added Role for Backend
+  role: string; // Kept for backend, but hardcoded to 'student'
   agreeToTerms: boolean;
 }
 
@@ -27,7 +27,7 @@ const Signup: React.FC = () => {
   const { register } = useAuth(); // Hook
   const navigate = useNavigate();
 
-  // 2. Typed State
+  // 2. Typed State (Role strictly defaults to 'student')
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -35,7 +35,7 @@ const Signup: React.FC = () => {
     gender: '',
     password: '',
     confirmPassword: '',
-    role: 'student', // Default
+    role: 'student', // <--- Hardcoded to student
     agreeToTerms: false
   });
 
@@ -104,18 +104,18 @@ const Signup: React.FC = () => {
     if (validate()) {
       setIsSubmitting(true);
       
-      // Call Backend via Context
+      // Call Backend via Context (Will register as 'student')
       const result = await register(
           formData.fullName, 
           formData.email, 
           formData.password, 
-          formData.role // Pass role (student/instructor)
+          formData.role 
       );
 
       setIsSubmitting(false);
 
       if (result.success) {
-        navigate('/dashboard'); // Or home '/'
+        navigate('/'); // <--- Redirects to Home Page now
       } else {
         setErrors({ api: result.message });
       }
@@ -176,7 +176,7 @@ const Signup: React.FC = () => {
         >
           <div className="text-left mb-10">
             <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Create Account</h1>
-            <p className="text-slate-500">Enter your details below to get started.</p>
+            <p className="text-slate-500">Enter your details below to get started as a Student.</p>
           </div>
 
           {/* API Error Alert */}
@@ -245,43 +245,24 @@ const Signup: React.FC = () => {
               </div>
             </div>
 
-            {/* Gender & Role Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Gender <span className="text-red-500">*</span></label>
-                    <div className="relative">
-                        <select
-                        name="gender"
-                        value={formData.gender}
-                        onChange={handleChange}
-                        className={`w-full pl-4 pr-10 py-3 bg-slate-50 border rounded-lg focus:ring-2 outline-none appearance-none transition-all text-slate-700 cursor-pointer ${errors.gender ? 'border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-purple-500 focus:ring-purple-200'}`}
-                        >
-                        <option value="">Select</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
-                    </div>
-                    {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
-                </div>
-
-                {/* Role Selection (Optional for Instructors) */}
-                <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">I am a</label>
-                    <div className="relative">
-                        <select
-                        name="role"
-                        value={formData.role}
-                        onChange={handleChange}
-                        className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:border-purple-500 focus:ring-purple-200 outline-none appearance-none transition-all text-slate-700 cursor-pointer"
-                        >
-                        <option value="student">Student</option>
-                        <option value="instructor">Instructor</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
-                    </div>
-                </div>
+            {/* Gender (Now Full Width) */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Gender <span className="text-red-500">*</span></label>
+              <div className="relative">
+                  <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className={`w-full pl-4 pr-10 py-3 bg-slate-50 border rounded-lg focus:ring-2 outline-none appearance-none transition-all text-slate-700 cursor-pointer ${errors.gender ? 'border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-purple-500 focus:ring-purple-200'}`}
+                  >
+                  <option value="">Select</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+              </div>
+              {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
             </div>
 
             {/* Passwords Grid */}
@@ -369,7 +350,7 @@ const Signup: React.FC = () => {
 
           {/* Footer Link */}
           <p className="text-center text-slate-500 mt-8 text-sm">
-            Already have an account? <Link to="/login" className="text-purple-600 font-bold hover:underline">Log in</Link>
+            Already have an account? <Link to="/login?role=student" className="text-purple-600 font-bold hover:underline">Log in</Link>
           </p>
 
         </motion.div>

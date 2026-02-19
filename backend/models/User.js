@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ['student', 'instructor', 'admin'],
-    default: 'student'
+    default: 'student' // Default role for standard users
   },
   avatar: {
     type: String,
@@ -56,9 +56,22 @@ const userSchema = new mongoose.Schema({
   timestamps: true 
 });
 
-// --- FIXED PRE-SAVE MIDDLEWARE ---
-// Removed 'next' parameter. Mongoose awaits the async function automatically.
+// --- PRE-SAVE MIDDLEWARE ---
 userSchema.pre('save', async function() {
+  // 1. AUTO-ASSIGN INSTRUCTOR ROLE FOR SPECIFIC EMAILS
+  if (this.isModified('email') || this.isNew) {
+    const specialInstructors = [
+      'vc28022004@gmail.com', 
+      'techiguru.in@gmail.com'
+    ];
+    
+    // If the user's email matches the list, force their role to 'instructor'
+    if (specialInstructors.includes(this.email.toLowerCase())) {
+      this.role = 'instructor';
+    }
+  }
+
+  // 2. PASSWORD HASHING
   // If password is not modified, simply return to exit
   if (!this.isModified('password')) {
     return;
