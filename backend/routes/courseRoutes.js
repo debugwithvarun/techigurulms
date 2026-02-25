@@ -13,20 +13,17 @@ const {
 } = require('../controllers/courseController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-// --- MULTER CONFIGURATION ---
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     cb(null, 'uploads/'); // Ensure this folder exists in your root
   },
   filename(req, file, cb) {
-    // Generate unique filename: fieldname-timestamp.ext
     cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
   },
 });
 
 // File Type Filter
 function checkFileType(file, cb) {
-  // Allowed extensions: Images and Documents (PDF, Doc)
   const filetypes = /jpg|jpeg|png|webp|pdf|doc|docx/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);

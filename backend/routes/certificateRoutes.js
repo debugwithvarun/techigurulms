@@ -13,7 +13,6 @@ const {
 } = require('../controllers/certificateController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-// ----MULTER CONFIGURATION (For Image Upload)----
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     cb(null, 'uploads/'); 
