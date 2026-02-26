@@ -111,7 +111,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, isInactive = false }) =
         navigate(`/course/${course.id}`);
     };
 
-    const displayPrice = course.price === 0 || course.price === 'Free' ? 'Free' : `$${course.price}`;
+    const displayPrice = course.price === 0 || course.price === 'Free' ? 'Free' : `${course.price}`;
     
     return (
         <motion.div 

@@ -44,15 +44,15 @@ const Navbar = () => {
   // --- NAVIGATION DATA ---
   const navLinks = [
     { name: 'Home', path: '/', hasDropdown: false },
-    { 
-      name: 'Courses', 
-      hasDropdown: true, 
-      dropdownItems: [
-        { title: 'Full Stack Dev', path: '/active-course', icon: <Globe size={16}/> }, 
-        { title: 'AI & Machine Learning', path: '/active-course', icon: <BookOpen size={16}/> }, 
-        { title: 'Mobile Development', path: '/active-course', icon: <Smartphone size={16}/> }
-      ] 
-    },
+    // { 
+    //   name: 'Courses', 
+    //   hasDropdown: true, 
+    //   dropdownItems: [
+    //     { title: 'Full Stack Dev', path: '/active-course', icon: <Globe size={16}/> }, 
+    //     { title: 'AI & Machine Learning', path: '/active-course', icon: <BookOpen size={16}/> }, 
+    //     { title: 'Mobile Development', path: '/active-course', icon: <Smartphone size={16}/> }
+    //   ] 
+    // },
     { 
       name: 'Training', 
       hasDropdown: true, 
