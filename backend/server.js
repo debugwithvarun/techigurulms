@@ -22,12 +22,34 @@ connectDB().then(() => {
 const app = express();
 
 // --- CORS CONFIGURATION (Fixed) ---
-app.use(cors({
-  origin: true, // Allows all origins dynamically while supporting credentials
-  credentials: true,
-  
-  
-}));
+const cors = require("cors");
+
+const allowedOrigins = [
+  "https://techiguru.in",
+  // "https://www.yourdomain.com",
+  // "https://app.yourdomain.com",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+
+      // allow requests with no origin (mobile apps, postman)
+      if (!origin) return callback(null, true);
+
+      // allow only HTTPS origins
+      if (
+        allowedOrigins.includes(origin) &&
+        origin.startsWith("https://")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS blocked: HTTPS only"));
+      }
+    },
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
