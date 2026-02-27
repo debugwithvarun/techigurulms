@@ -11,22 +11,20 @@ const getCourses = async (req, res) => {
     const page = Number(req.query.pageNumber) || 1;
     const status = req.query.status || 'Active';
 
-    // Search by Keyword
     const keyword = req.query.keyword
       ? { title: { $regex: req.query.keyword, $options: 'i' } }
       : {};
 
-    // Filter by Category
     const category = req.query.category && req.query.category !== 'All'
       ? { category: req.query.category }
       : {};
 
-    // Filter by Level
     const level = req.query.level && req.query.level !== 'All'
       ? { level: req.query.level }
       : {};
 
-    const query = { ...keyword, ...category, ...level, status };
+    // Public: only show admin-approved courses
+    const query = { ...keyword, ...category, ...level, status, approvalStatus: 'approved' };
 
     const count = await Course.countDocuments(query);
     const courses = await Course.find(query)
@@ -66,7 +64,7 @@ const createCourse = async (req, res) => {
   try {
     const {
       title, description, price, category, status,
-      thumbnail, sections, level, learningPoints, requirements
+      thumbnail, sections, syllabus, level, learningPoints, requirements
     } = req.body;
 
     const newCourse = new Course({
@@ -76,14 +74,12 @@ const createCourse = async (req, res) => {
       price,
       category,
       status: status || 'Draft',
-      // FIX: Wrap string URL in an object to match Schema
       thumbnail: thumbnail ? { url: thumbnail } : undefined,
       level,
       learningPoints,
       requirements,
-      // IMPORTANT: This 'sections' array contains the nested
-      // resources, codeSnippets, and quizzes from the frontend
-      sections: sections || []
+      sections: sections || [],
+      syllabus: syllabus || []
     });
 
     const createdCourse = await newCourse.save();
@@ -102,19 +98,16 @@ const updateCourse = async (req, res) => {
     const course = await Course.findById(req.params.id);
 
     if (course) {
-      // Authorization Check
       if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
         return res.status(403).json({ message: 'Not authorized to update this course' });
       }
 
-      // Update Fields
       course.title = req.body.title || course.title;
       course.description = req.body.description || course.description;
       course.price = req.body.price !== undefined ? req.body.price : course.price;
       course.category = req.body.category || course.category;
       course.status = req.body.status || course.status;
-      
-      // FIX: Handle thumbnail update. If string is sent, wrap it in object.
+
       if (req.body.thumbnail) {
         course.thumbnail = { url: req.body.thumbnail };
       }
@@ -123,10 +116,12 @@ const updateCourse = async (req, res) => {
       course.learningPoints = req.body.learningPoints || course.learningPoints;
       course.requirements = req.body.requirements || course.requirements;
 
-      // Update Sections (Full Replace)
-      // This ensures removed items (quizzes, resources) are actually deleted
-      if (req.body.sections) {
+      // Full Replace for sections (curriculum) and syllabus
+      if (req.body.sections !== undefined) {
         course.sections = req.body.sections;
+      }
+      if (req.body.syllabus !== undefined) {
+        course.syllabus = req.body.syllabus;
       }
 
       const updatedCourse = await course.save();
@@ -181,7 +176,6 @@ const uploadCourseImage = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    // Convert backslashes to forward slashes for URL compatibility
     const imagePath = `/${req.file.path.replace(/\\/g, '/')}`;
     res.status(200).json({ url: imagePath, message: 'File uploaded successfully' });
   } catch (error) {

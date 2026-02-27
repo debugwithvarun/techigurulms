@@ -14,24 +14,16 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const loadUser = async () => {
             const userInfo = localStorage.getItem('userInfo');
-            
             if (userInfo) {
-                const parsedUser = JSON.parse(userInfo);
-                setUser(parsedUser);
-                
-                // Verify token validity with backend (optional but recommended)
                 try {
-                    // We temporarily set the user state, but verify via API
-                    // If the token is invalid, the interceptor or backend will fail
-                    // For now, we trust localStorage to keep UI snappy
-                } catch (err) {
-                    console.error("Session expired");
-                    logout();
+                    const parsedUser = JSON.parse(userInfo);
+                    setUser(parsedUser);
+                } catch {
+                    localStorage.removeItem('userInfo');
                 }
             }
             setLoading(false);
         };
-
         loadUser();
     }, []);
 
@@ -57,7 +49,7 @@ export const AuthProvider = ({ children }) => {
             const { data } = await api.post('/auth/register', { name, email, password, role });
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
-            return { success: true };
+            return { success: true, pendingApproval: data.pendingApproval };
         } catch (err) {
             const message = err.response?.data?.message || 'Registration failed';
             setError(message);
@@ -69,11 +61,32 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('userInfo');
         setUser(null);
-        // Optional: Redirect to login via window.location or navigate in component
+    };
+
+    // 5. Update Profile
+    const updateProfile = async (profileData) => {
+        try {
+            const { data } = await api.put('/auth/profile', profileData);
+            setUser(data);
+            localStorage.setItem('userInfo', JSON.stringify(data));
+            return { success: true, data };
+        } catch (err) {
+            return { success: false, message: err.response?.data?.message || 'Update failed' };
+        }
+    };
+
+    // 6. Get My Enrolled Courses with Progress
+    const getMyEnrollments = async () => {
+        try {
+            const { data } = await api.get('/auth/my-enrollments');
+            return { success: true, data };
+        } catch (err) {
+            return { success: false, data: [], message: err.response?.data?.message };
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, error, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, error, login, register, logout, updateProfile, getMyEnrollments }}>
             {children}
         </AuthContext.Provider>
     );

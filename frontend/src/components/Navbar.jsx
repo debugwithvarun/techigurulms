@@ -44,15 +44,6 @@ const Navbar = () => {
   // --- NAVIGATION DATA ---
   const navLinks = [
     { name: 'Home', path: '/', hasDropdown: false },
-    // { 
-    //   name: 'Courses', 
-    //   hasDropdown: true, 
-    //   dropdownItems: [
-    //     { title: 'Full Stack Dev', path: '/active-course', icon: <Globe size={16}/> }, 
-    //     { title: 'AI & Machine Learning', path: '/active-course', icon: <BookOpen size={16}/> }, 
-    //     { title: 'Mobile Development', path: '/active-course', icon: <Smartphone size={16}/> }
-    //   ] 
-    // },
     { 
       name: 'Training', 
       hasDropdown: true, 
@@ -69,9 +60,14 @@ const Navbar = () => {
         { title: 'Archived Certificates', path: '/inactive-certificates', icon: <PauseCircle size={16}/> }
       ] 
     },
-    // 🔥 Dashboard will ONLY render if the logged-in user's role is strictly 'instructor'
-    ...(user?.role === 'instructor' ? [{ name: 'Dashboard', path: '/dashboard', hasDropdown: false }] : [])
+    { name: 'About', path: '/about', hasDropdown: false },
+    { name: 'Contact', path: '/contact', hasDropdown: false },
+    // Dashboard only for instructors
+    ...(user?.role === 'instructor' ? [{ name: 'Dashboard', path: '/dashboard', hasDropdown: false }] : []),
+    // Admin panel only for admins
+    ...(user?.role === 'admin' ? [{ name: 'Admin', path: '/admin', hasDropdown: false }] : []),
   ];
+
 
   return (
     <>

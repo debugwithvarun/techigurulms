@@ -1,21 +1,20 @@
 import axios from 'axios';
+import { API_URL } from '../config';
 
-// const backendapiurl = process.env.backend-api-url || 'http://localhost:5000/api';
 const api = axios.create({
-    baseURL: 'http://13.127.138.86:5000/api', 
-    // baseURL: 'https://techiguru-backend.onrender.com/api', // Matches your backend port
-    // baseURL: 'http://localhost:5000/api',
+    baseURL: API_URL,
 });
+
 
 // --- REQUEST INTERCEPTOR ---
 // Automatically adds the Token to the header of every request
 api.interceptors.request.use(
     (config) => {
         // Get user info from local storage
-        const userInfo = localStorage.getItem('userInfo') 
-            ? JSON.parse(localStorage.getItem('userInfo')) 
+        const userInfo = localStorage.getItem('userInfo')
+            ? JSON.parse(localStorage.getItem('userInfo'))
             : null;
-        
+
         if (userInfo && userInfo.token) {
             config.headers.Authorization = `Bearer ${userInfo.token}`;
         }

@@ -11,6 +11,7 @@ const {
   getMyCourses,
   uploadCourseImage
 } = require('../controllers/courseController');
+const { enrollInCourse, updateProgress, getMyEnrollment, issueCertificate, getMyCertificates } = require('../controllers/enrollmentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const storage = multer.diskStorage({
@@ -60,5 +61,12 @@ router.route('/:id')
   .get(getCourseById)
   .put(protect, authorize('instructor', 'admin'), updateCourse)
   .delete(protect, authorize('instructor', 'admin'), deleteCourse);
+
+// ── Enrollment & Certificates ────────────────────────────────────────────────
+router.post('/:id/enroll', protect, enrollInCourse);
+router.put('/:id/progress', protect, updateProgress);
+router.get('/:id/my-enrollment', protect, getMyEnrollment);
+router.post('/:id/certificate', protect, issueCertificate);
+router.get('/user/my-certificates', protect, getMyCertificates);
 
 module.exports = router;

@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -14,86 +16,104 @@ const userSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     lowercase: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email'
-    ]
+    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please add a valid email']
   },
   password: {
     type: String,
     required: [true, 'Please add a password'],
     minlength: [6, 'Password must be at least 6 characters'],
-    select: false // Do not return password by default in queries
+    select: false
   },
   role: {
     type: String,
     enum: ['student', 'instructor', 'admin'],
-    default: 'student' // Default role for standard users
+    default: 'student'
   },
-  avatar: {
+
+  // ── Instructor-specific fields ─────────────────────────────────────────────
+  // Instructors must be approved by admin before their courses are listed
+  instructorStatus: {
     type: String,
-    default: 'https://i.pravatar.cc/150?u=default' // Default placeholder
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
   },
-  bio: {
-    type: String,
-    maxlength: [500, 'Bio cannot be more than 500 characters']
+  instructorBio: { type: String, maxlength: 1000 },
+  expertise: [String],          // Areas of expertise
+  socialLinks: {
+    website: String,
+    linkedin: String,
+    twitter: String,
+    youtube: String,
   },
-  title: {
-    type: String, // e.g., "Senior Python Developer"
-    trim: true
-  },
-  enrolledCourses: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course'
+  totalStudents: { type: Number, default: 0 },
+  totalRevenue: { type: Number, default: 0 },
+  totalCourses: { type: Number, default: 0 },
+
+  // ── Student-specific fields ────────────────────────────────────────────────
+  avatar: { type: String, default: '' },
+  bio: { type: String, maxlength: 500 },
+  title: { type: String, trim: true },
+  enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  createdCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+
+  // ── Certificate & Points System ────────────────────────────────────────────
+  completedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  earnedCertificates: [{
+    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+    issuedAt: { type: Date, default: Date.now },
+    certificateUrl: String,
+    certificateId: String,
   }],
-  createdCourses: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course'
-  }],
+  profilePoints: { type: Number, default: 0 },  // Points earned from certificates
+  badges: [String],
+
+  // ── Misc ──────────────────────────────────────────────────────────────────
   resetPasswordToken: String,
-  resetPasswordExpire: Date
+  resetPasswordExpire: Date,
+  isActive: { type: Boolean, default: true },
+  lastLogin: Date
 }, {
-  timestamps: true 
+  timestamps: true
 });
 
-// --- PRE-SAVE MIDDLEWARE ---
-userSchema.pre('save', async function() {
-  // 1. AUTO-ASSIGN INSTRUCTOR ROLE FOR SPECIFIC EMAILS
+// ── Pre-save: Role assignment, password hashing ────────────────────────────
+userSchema.pre('save', async function () {
+  // 1. Admin/Instructor auto-assignment for whitelisted emails
   if (this.isModified('email') || this.isNew) {
-    const specialInstructors = [
-      'vc28022004@gmail.com', 
-      'techiguru.in@gmail.com'
-    ];
-    
-    // If the user's email matches the list, force their role to 'instructor'
-    if (specialInstructors.includes(this.email.toLowerCase())) {
-      this.role = 'instructor';
+    if (ADMIN_EMAILS.includes(this.email.toLowerCase())) {
+      this.role = 'admin';
+      this.instructorStatus = 'approved';
     }
   }
 
-  // 2. PASSWORD HASHING
-  // If password is not modified, simply return to exit
-  if (!this.isModified('password')) {
-    return;
+  // 2. Instructors that are NOT admin need approval
+  if (this.isModified('role') && this.role === 'instructor') {
+    if (!ADMIN_EMAILS.includes(this.email.toLowerCase())) {
+      this.instructorStatus = 'pending';
+    }
   }
 
-  // Generate Salt & Hash
+  // 3. Password hashing
+  if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Match user entered password to hashed password in database
-userSchema.methods.matchPassword = async function(enteredPassword) {
+userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Helper method to get public profile data (removes sensitive info)
-userSchema.methods.getPublicProfile = function() {
-  const userObject = this.toObject();
-  delete userObject.password;
-  delete userObject.resetPasswordToken;
-  delete userObject.resetPasswordExpire;
-  return userObject;
+userSchema.methods.getPublicProfile = function () {
+  const obj = this.toObject();
+  delete obj.password;
+  delete obj.resetPasswordToken;
+  delete obj.resetPasswordExpire;
+  return obj;
 };
+
+// Virtual: Is instructor approved to publish?
+userSchema.virtual('canPublish').get(function () {
+  return this.role === 'admin' || (this.role === 'instructor' && this.instructorStatus === 'approved');
+});
 
 module.exports = mongoose.model('User', userSchema);

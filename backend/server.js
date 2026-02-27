@@ -7,22 +7,24 @@ const path = require('path');
 // --- Import Routes & Utils ---
 const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const certificateRoutes = require('./routes/certificateRoutes'); 
+const certificateRoutes = require('./routes/certificateRoutes');
+const blogRoutes = require('./routes/blogRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const seedInstructors = require('./utlis/Seeder');
 
 dotenv.config();
 
 // --- Connect to Database ---
 connectDB().then(() => {
-    seedInstructors(); 
+  seedInstructors();
 });
 
 const app = express();
 
 // --- CORS CONFIGURATION (Fixed) ---
 app.use(cors({
-    origin: true, // Allows all origins dynamically while supporting credentials
-    credentials: true
+  origin: true, // Allows all origins dynamically while supporting credentials
+  credentials: true
 }));
 
 app.use(express.json());
@@ -30,7 +32,9 @@ app.use(express.json());
 // --- MOUNT ROUTES ---
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
-app.use('/api/certificates', certificateRoutes); 
+app.use('/api/certificates', certificateRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/admin', adminRoutes);
 
 // --- STATIC FOLDER ---
 // Serve images/files uploaded to /uploads

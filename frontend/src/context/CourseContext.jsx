@@ -110,6 +110,26 @@ export const CourseProvider = ({ children }) => {
         }
     };
 
+    // 8. Enroll in Course
+    const enrollInCourse = async (id) => {
+        try {
+            const { data } = await api.post(`/courses/${id}/enroll`);
+            return { success: true, data };
+        } catch (err) {
+            return { success: false, message: err.response?.data?.message || 'Enrollment failed' };
+        }
+    };
+
+    // 9. Check Enrollment
+    const checkEnrollment = async (id) => {
+        try {
+            const { data } = await api.get(`/courses/${id}/my-enrollment`);
+            return { success: true, enrolled: data.enrolled, enrollmentData: data };
+        } catch (err) {
+            return { success: false, enrolled: false, message: err.response?.data?.message || 'Check failed' };
+        }
+    };
+
     return (
         <CourseContext.Provider value={{ 
             courses, 
@@ -122,7 +142,9 @@ export const CourseProvider = ({ children }) => {
             uploadCourseAsset, // New function exposed to context
             createCourse, 
             updateCourse, 
-            deleteCourse 
+            deleteCourse,
+            enrollInCourse,
+            checkEnrollment
         }}>
             {children}
         </CourseContext.Provider>
