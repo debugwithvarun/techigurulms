@@ -24,7 +24,9 @@ const app = express();
 // --- CORS CONFIGURATION (Fixed) ---
 app.use(cors({
   origin: true, // Allows all origins dynamically while supporting credentials
-  credentials: true
+  credentials: true,
+  
+  
 }));
 
 app.use(express.json());
