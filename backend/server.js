@@ -1,6 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
-const cors = require('cors');
+// const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
 
@@ -25,7 +25,9 @@ const app = express();
 const cors = require("cors");
 
 const allowedOrigins = [
+  "http://techiguru.in",
   "https://techiguru.in",
+  "http://localhost:5173",
   // "https://www.yourdomain.com",
   // "https://app.yourdomain.com",
 ];
@@ -39,8 +41,7 @@ app.use(
 
       // allow only HTTPS origins
       if (
-        allowedOrigins.includes(origin) &&
-        origin.startsWith("https://")
+        allowedOrigins.includes(origin) 
       ) {
         callback(null, true);
       } else {
