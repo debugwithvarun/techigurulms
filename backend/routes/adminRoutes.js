@@ -5,7 +5,8 @@ const {
     isAdmin,
     getPendingInstructors, getAllInstructors, approveInstructor, rejectInstructor,
     getPendingCourses, getAllCourses, approveCourse, rejectCourse,
-    getPlatformStats, getAllUsers
+    getPlatformStats, getAllUsers,
+    getAllStudentCertificates, approveStudentCertificate, rejectStudentCertificate
 } = require('../controllers/adminController');
 
 // All admin routes require login + admin check
@@ -28,5 +29,10 @@ router.get('/courses', getAllCourses);
 router.get('/courses/pending', getPendingCourses);
 router.put('/courses/:id/approve', approveCourse);
 router.put('/courses/:id/reject', rejectCourse);
+
+// Student Certificates
+router.get('/student-certs', getAllStudentCertificates);
+router.put('/student-certs/:id/approve', approveStudentCertificate);
+router.put('/student-certs/:id/reject', rejectStudentCertificate);
 
 module.exports = router;

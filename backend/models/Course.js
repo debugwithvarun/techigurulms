@@ -5,7 +5,15 @@ const slugify = require('slugify');
 
 const resourceSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  url: { type: String, required: true }
+  url: { type: String, default: '' },   // External URL
+  fileUrl: { type: String, default: '' }, // Uploaded file path
+  fileType: { type: String, enum: ['link', 'pdf', 'doc', 'other'], default: 'link' }
+}, { _id: true });
+
+const tutorialLinkSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  url: { type: String, required: true },
+  platform: { type: String, default: '' }  // e.g. 'YouTube', 'GitHub'
 }, { _id: true });
 
 const codeSnippetSchema = new mongoose.Schema({
@@ -66,6 +74,7 @@ const lessonSchema = new mongoose.Schema({
   description: { type: String, trim: true, default: '' },
   isFree: { type: Boolean, default: false },
   resources: [resourceSchema],
+  tutorialLinks: [tutorialLinkSchema],
   codeSnippets: [codeSnippetSchema],
   quizzes: [quizSchema],
   // VIDEO SUB-PARTS: A video can contain multiple sub-parts, each with optional sub-sub-parts
@@ -176,7 +185,9 @@ const courseSchema = new mongoose.Schema({
     type: String,
     enum: ['Draft', 'Active', 'Inactive'],
     default: 'Draft'
-  }
+  },
+  // Points required to unlock this paid course (0 = no points required)
+  pointsRequired: { type: Number, default: 0, min: 0 }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

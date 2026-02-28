@@ -66,6 +66,8 @@ const Navbar = () => {
     ...(user?.role === 'instructor' ? [{ name: 'Dashboard', path: '/dashboard', hasDropdown: false }] : []),
     // Admin panel only for admins
     ...(user?.role === 'admin' ? [{ name: 'Admin', path: '/admin', hasDropdown: false }] : []),
+    // Student dashboard only for students
+    ...(user?.role === 'student' ? [{ name: 'My Dashboard', path: '/student-dashboard', hasDropdown: false }] : []),
   ];
 
 
@@ -215,6 +217,18 @@ const Navbar = () => {
                               </Link>
                               </>
                             )}
+
+                            {user?.role === 'student' && (
+                              <Link to="/student-dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                  <LayoutDashboard size={16}/> My Dashboard
+                              </Link>
+                            )}
+
+                            {user?.role === 'admin' && (
+                              <Link to="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                  <LayoutDashboard size={16}/> Admin Panel
+                              </Link>
+                            )}
                             
 
                             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-50 mt-1">
@@ -272,9 +286,9 @@ const Navbar = () => {
                         <Link to="/signup?role=student" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
                           <GraduationCap size={16} className="text-purple-500"/> As Student
                         </Link>
-                        {/* <Link to="/signup?role=instructor" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                        <Link to="/signup?role=instructor" className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
                           <Briefcase size={16} className="text-purple-500"/> As Instructor
-                        </Link> */}
+                        </Link>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -358,9 +372,9 @@ const Navbar = () => {
                       <Link to="/signup?role=student" className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-purple-600 text-white font-semibold shadow-md hover:bg-purple-700 transition-colors">
                         <GraduationCap size={18}/> Student Sign Up
                       </Link>
-                      {/* <Link to="/signup?role=instructor" className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 transition-colors">
+                      <Link to="/signup?role=instructor" className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 transition-colors">
                         <Briefcase size={18}/> Instructor Sign Up
-                      </Link> */}
+                      </Link>
                     </div>
                   </>
                 ) : (

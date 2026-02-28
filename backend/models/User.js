@@ -67,6 +67,15 @@ const userSchema = new mongoose.Schema({
   profilePoints: { type: Number, default: 0 },  // Points earned from certificates
   badges: [String],
 
+  // Tracks external cert programs the student has redirected to (enables upload)
+  redirectedCertificates: [{
+    certId: { type: mongoose.Schema.Types.ObjectId, ref: 'Certificate' },
+    redirectedAt: { type: Date, default: Date.now }
+  }],
+
+  // Courses unlocked by spending points
+  unlockedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+
   // ── Misc ──────────────────────────────────────────────────────────────────
   resetPasswordToken: String,
   resetPasswordExpire: Date,

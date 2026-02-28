@@ -12,11 +12,11 @@ export const CourseProvider = ({ children }) => {
     const [error, setError] = useState(null);
 
     // 1. Fetch All Public Courses (With Pagination, Search & Filters)
-    const fetchCourses = async (keyword = '', pageNumber = '', category = '', level = '') => {
+    const fetchCourses = async (keyword = '', pageNumber = '', category = '', level = '',status="Active") => {
         setLoading(true);
         try {
             // Updated to support Category and Level filters from Backend
-            const { data } = await api.get(`/courses?keyword=${keyword}&pageNumber=${pageNumber}&category=${category}&level=${level}`);
+            const { data } = await api.get(`/courses?keyword=${keyword}&pageNumber=${pageNumber}&category=${category}&level=${level}&status=${status}`);
             setCourses(data.courses);
             return data; // Returns { courses, page, pages, total }
         } catch (err) {

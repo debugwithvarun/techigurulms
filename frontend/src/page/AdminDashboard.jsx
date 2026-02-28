@@ -6,8 +6,10 @@ import api from '../api/axios';
 import {
     Users, BookOpen, TrendingUp, Clock, CheckCircle, XCircle, Eye,
     BarChart3, GraduationCap, AlertCircle, RefreshCw, Medal, ChevronRight,
-    IndianRupee, Shield, UserCheck, Search, Filter, LogOut, Menu, X
+    IndianRupee, Shield, UserCheck, Search, Filter, LogOut, Menu, X,
+    Upload, Award, Star, FileText, ExternalLink
 } from 'lucide-react';
+import { getImageUrl } from '../config';
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
@@ -39,6 +41,8 @@ const AdminDashboard = () => {
     const [search, setSearch] = useState('');
     const [mobileOpen, setMobileOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(null);
+    const [studentCerts, setStudentCerts] = useState([]);
+    const [certNote, setCertNote] = useState({});
 
     // Auth guard
     useEffect(() => {
@@ -51,18 +55,20 @@ const AdminDashboard = () => {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const [statsRes, pendingInstRes, pendingCoursesRes, usersRes, coursesRes] = await Promise.all([
+            const [statsRes, pendingInstRes, pendingCoursesRes, usersRes, coursesRes, certRes] = await Promise.all([
                 api.get('/admin/stats'),
                 api.get('/admin/instructors/pending'),
                 api.get('/admin/courses/pending'),
                 api.get('/admin/users'),
                 api.get('/admin/courses'),
+                api.get('/admin/student-certs'),
             ]);
             setStats(statsRes.data);
             setPendingInstructors(pendingInstRes.data);
             setPendingCourses(pendingCoursesRes.data);
             setAllUsers(usersRes.data);
             setAllCourses(coursesRes.data);
+            setStudentCerts(certRes.data);
         } catch (err) { console.error(err); }
         setLoading(false);
     }, []);
@@ -93,16 +99,35 @@ const AdminDashboard = () => {
         setActionLoading(null);
     };
 
+    const handleApproveStudentCert = async (id) => {
+        setActionLoading(id + '_ca');
+        try {
+            await api.put(`/admin/student-certs/${id}/approve`, { note: certNote[id] || '' });
+            await loadData();
+        } catch (e) { console.error(e); }
+        setActionLoading(null);
+    };
+
+    const handleRejectStudentCert = async (id) => {
+        setActionLoading(id + '_cr');
+        try {
+            await api.put(`/admin/student-certs/${id}/reject`, { note: certNote[id] || 'Does not meet requirements' });
+            await loadData();
+        } catch (e) { console.error(e); }
+        setActionLoading(null);
+    };
+
     const TABS = [
         { id: 'overview', label: 'Overview', icon: BarChart3 },
         { id: 'instructors', label: 'Instructors', icon: UserCheck, badge: pendingInstructors.length },
         { id: 'courses', label: 'Courses', icon: BookOpen, badge: pendingCourses.length },
         { id: 'students', label: 'Students', icon: Users },
+        { id: 'student-certs', label: 'Student Certs', icon: Award, badge: studentCerts.filter(c => c.status === 'pending').length },
         { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     ];
 
     const sidebarContent = (
-        <div className="flex flex-col h-full" style={{ background: '#1c1d1f', borderRight: '1px solid #2d2f31' }}>
+        <div className="flex flex-col min-h-screen" style={{ background: '#1c1d1f', borderRight: '1px solid #2d2f31' }}>
             <div className="flex items-center gap-2.5 px-5 py-5 border-b" style={{ borderColor: '#2d2f31' }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#a435f0' }}>
                     <Shield size={16} className="text-white" />
@@ -458,6 +483,109 @@ const AdminDashboard = () => {
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* STUDENT CERTS TAB */}
+                    {activeTab === 'student-certs' && (
+                        <div className="space-y-5 max-w-6xl">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-900">Student Certificate Submissions</h2>
+                                    <p className="text-sm text-gray-500 mt-0.5">Review and approve student-uploaded certificates. Approving awards points to the student.</p>
+                                </div>
+                                <div className="flex gap-2 text-xs">
+                                    <span className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-full font-semibold">{studentCerts.filter(c => c.status === 'pending').length} pending</span>
+                                    <span className="px-2.5 py-1.5 bg-green-50 text-green-700 rounded-full font-semibold">{studentCerts.filter(c => c.status === 'approved').length} approved</span>
+                                </div>
+                            </div>
+
+                            {studentCerts.length === 0 ? (
+                                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                                    <Upload size={36} className="mx-auto mb-3 text-gray-300" />
+                                    <p className="text-gray-500 font-medium">No student certificates submitted yet</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {studentCerts.map((cert) => (
+                                        <div key={cert._id} className="bg-white rounded-xl border border-gray-200 p-5">
+                                            <div className="flex flex-col lg:flex-row lg:items-start gap-5">
+                                                {/* Preview */}
+                                                <div className="w-full lg:w-32 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                    {cert.fileType === 'pdf' ? (
+                                                        <div className="flex flex-col items-center gap-1 text-red-400">
+                                                            <FileText size={28} />
+                                                            <span className="text-[10px] font-bold uppercase">PDF</span>
+                                                        </div>
+                                                    ) : (
+                                                        <img src={`http://localhost:5000${cert.uploadUrl}`} alt="cert" className="w-full h-full object-cover" />
+                                                    )}
+                                                </div>
+
+                                                {/* Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex flex-wrap items-start gap-3 mb-2">
+                                                        <div>
+                                                            <p className="font-bold text-gray-900">{cert.student?.name}</p>
+                                                            <p className="text-xs text-gray-400">{cert.student?.email}</p>
+                                                        </div>
+                                                        <span className={`ml-auto px-2.5 py-1 rounded-full text-xs font-bold ${
+                                                            cert.status === 'pending' ? 'bg-amber-50 text-amber-700' :
+                                                            cert.status === 'approved' ? 'bg-green-50 text-green-700' :
+                                                            'bg-red-50 text-red-700'
+                                                        }`}>{cert.status}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
+                                                        <span className="flex items-center gap-1.5"><Award size={13} className="text-purple-500" />{cert.certificateProgram?.title}</span>
+                                                        <span className="flex items-center gap-1.5"><Star size={13} className="text-amber-500" />{cert.certificateProgram?.points || 50} pts on approval</span>
+                                                        <span className="text-gray-400 text-xs">{new Date(cert.createdAt).toLocaleDateString('en-IN')}</span>
+                                                    </div>
+
+                                                    {/* View file */}
+                                                    <a href={`http://localhost:5000${cert.uploadUrl}`} target="_blank" rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 underline mb-3">
+                                                        <ExternalLink size={12} />View Uploaded File
+                                                    </a>
+
+                                                    {cert.status === 'approved' && (
+                                                        <p className="text-xs text-green-600 font-semibold">✅ {cert.pointsAwarded} points awarded · Approved by {cert.approvedBy?.name}</p>
+                                                    )}
+                                                    {cert.status === 'rejected' && cert.adminNote && (
+                                                        <p className="text-xs text-red-500">❌ {cert.adminNote}</p>
+                                                    )}
+
+                                                    {/* Admin Note + Actions */}
+                                                    {cert.status === 'pending' && (
+                                                        <div className="flex flex-wrap items-center gap-3 mt-3">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Optional note to student..."
+                                                                value={certNote[cert._id] || ''}
+                                                                onChange={e => setCertNote(prev => ({ ...prev, [cert._id]: e.target.value }))}
+                                                                className="flex-1 min-w-[180px] px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-purple-400"
+                                                            />
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => handleApproveStudentCert(cert._id)}
+                                                                    disabled={actionLoading === cert._id + '_ca'}
+                                                                    className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors">
+                                                                    {actionLoading === cert._id + '_ca' ? '...' : '✓ Approve'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleRejectStudentCert(cert._id)}
+                                                                    disabled={actionLoading === cert._id + '_cr'}
+                                                                    className="px-4 py-2 bg-red-100 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-200 disabled:opacity-50 transition-colors">
+                                                                    {actionLoading === cert._id + '_cr' ? '...' : '✗ Reject'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
 

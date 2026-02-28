@@ -35,10 +35,12 @@ const ActiveCourses = () => {
         const load = async () => {
             setFetching(true);
             try {
-                const data = await fetchCourses('', '', 'All', 'All Levels');
+                const data = await fetchCourses('', '', '', '','Active');
+                // console.log(data)
                 if (data?.courses) {
                     // Only Active (status=Active from getCourses default)
-                    setCourses(data.courses);
+                        const active = data.courses.filter(c => c.status === 'Active');
+                    setCourses(active.length > 0 ? active : data.courses); // fallback: show all if no active
                 }
                 if (user) {
                     const res = await getMyEnrollments();

@@ -10,6 +10,8 @@ const courseRoutes = require('./routes/courseRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
 const blogRoutes = require('./routes/blogRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 const seedInstructors = require('./utlis/Seeder');
 
 dotenv.config();
@@ -27,6 +29,8 @@ const cors = require("cors");
 const allowedOrigins = [
   "http://techiguru.in",
   "https://techiguru.in",
+  "http://www.techiguru.in",
+  "https://www.techiguru.in",
   "http://localhost:5173",
   // "https://www.yourdomain.com",
   // "https://app.yourdomain.com",
@@ -41,7 +45,7 @@ app.use(
 
       // allow only HTTPS origins
       if (
-        allowedOrigins.includes(origin) 
+        allowedOrigins.includes(origin)
       ) {
         callback(null, true);
       } else {
@@ -60,6 +64,8 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/contact', contactRoutes);
 
 // --- STATIC FOLDER ---
 // Serve images/files uploaded to /uploads

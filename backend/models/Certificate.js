@@ -38,6 +38,11 @@ const certificateSchema = new mongoose.Schema({
   thumbnail: {
     type: String,
     default: null
+  },
+  points: {
+    type: Number,
+    default: 50,
+    min: [0, 'Points cannot be negative']
   }
 }, {
   timestamps: true

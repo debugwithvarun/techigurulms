@@ -16,11 +16,11 @@ const InactiveCourses = () => {
         const load = async () => {
             setFetching(true);
             // Fetch inactive/archived courses using status filter
-            const data = await fetchCourses('', '', '', '');
+            const data = await fetchCourses('', '', '', '','Inactive');
             if (data?.courses) {
                 // Show courses that are not active (inactive/draft/archived)
                 const inactive = data.courses.filter(c =>
-                    c.status === 'inactive' || c.status === 'draft' || c.approvalStatus === 'pending'
+                    c.status === 'Inactive' || c.status === 'Draft' || c.approvalStatus === 'pending'
                 );
                 setCourses(inactive.length > 0 ? inactive : data.courses); // fallback: show all if no inactive
             }

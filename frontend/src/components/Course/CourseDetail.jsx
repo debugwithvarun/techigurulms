@@ -162,22 +162,33 @@ const ResourceBlock = ({ resources }) => (
             <span className="ml-auto text-xs text-slate-500 bg-slate-700/50 px-2 py-0.5 rounded-full">{resources.length} files</span>
         </div>
         <div className="divide-y divide-slate-700/40">
-            {resources.map((res, idx) => (
-                <a key={idx} href={res.url?.startsWith('http') ? res.url : `https://${res.url}`}
-                    target="_blank" rel="noreferrer"
-                    className="flex items-center justify-between p-4 hover:bg-slate-700/20 transition-colors group">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-blue-500/10 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                            <Download size={16} className="text-blue-400 group-hover:text-white transition-colors" />
+            {resources.map((res, idx) => {
+                let fileUrl = res.url;
+                if (res.fileType === 'pdf' && res.fileUrl) {
+                    fileUrl = getImageUrl(res.fileUrl);
+                } else if (!fileUrl?.startsWith('http')) {
+                    fileUrl = `https://${fileUrl}`;
+                }
+                
+                return (
+                    <a key={idx} href={fileUrl}
+                        target="_blank" rel="noreferrer"
+                        className="flex items-center justify-between p-4 hover:bg-slate-700/20 transition-colors group">
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 bg-blue-500/10 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                                <Download size={16} className="text-blue-400 group-hover:text-white transition-colors" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-slate-200 group-hover:text-blue-400 transition-colors">{res.title}</p>
+                                <p className="text-xs text-slate-500">
+                                    {res.fileType === 'pdf' ? 'PDF Document' : 'External Link'}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="text-sm font-semibold text-slate-200 group-hover:text-blue-400 transition-colors">{res.title}</p>
-                            <p className="text-xs text-slate-500">Click to open</p>
-                        </div>
-                    </div>
-                    <span className="text-xs text-slate-500 font-mono">↗</span>
-                </a>
-            ))}
+                        <span className="text-xs text-slate-500 font-mono">↗</span>
+                    </a>
+                );
+            })}
         </div>
     </div>
 );
@@ -412,19 +423,24 @@ const CourseDetail = () => {
                 <div className="flex flex-col gap-6">
 
                     {/* VIDEO PLAYER */}
-                    <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-white/[0.06] relative">
+                    <div 
+                        className="w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-white/[0.06] relative group"
+                        onContextMenu={(e) => e.preventDefault()}
+                    >
                         <AnimatePresence mode="wait">
                             {activeLesson?.videoKey ? (
-                                <motion.div key={activeLesson._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full h-full">
+                                <motion.div key={activeLesson._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full h-full relative">
                                     <iframe
                                         key={activeLesson.videoKey}
                                         width="100%" height="100%"
-                                        src={`https://www.youtube.com/embed/${activeLesson.videoKey}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&color=white`}
+                                        src={`https://www.youtube.com/embed/${activeLesson.videoKey}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&color=white&controls=1&disablekb=1&fs=1`}
                                         title={activeLesson.title}
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                                         allowFullScreen
-                                        className="w-full h-full"
+                                        className="w-full h-full pointer-events-auto"
                                     />
+                                    {/* Security Overlay - Blocks right click and transparent hover area */}
+                                    {/* <div className="absolute inset-0 z-10 bg-transparent" onContextMenu={(e) => e.preventDefault()} /> */}
                                 </motion.div>
                             ) : (
                                 <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -475,11 +491,11 @@ const CourseDetail = () => {
                     )}
 
                     {/* TABS */}
-                    <div className="border-b border-white/[0.06] flex gap-8">
-                        {['overview', 'qa', 'notes'].map(tab => (
+                    <div className="border-b border-white/[0.06] flex gap-8 overflow-x-auto no-scrollbar">
+                        {(course?.syllabus?.length > 0 ? ['overview', 'syllabus', 'qa', 'tutorials', 'notes'] : ['overview', 'qa', 'tutorials', 'notes']).map(tab => (
                             <button key={tab} onClick={() => setActiveTab(tab)}
-                                className={`pb-3 text-sm font-bold capitalize border-b-2 transition-all -mb-px ${activeTab === tab ? 'border-indigo-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
-                                {tab === 'qa' ? 'Q&A' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                className={`pb-3 text-sm font-bold capitalize border-b-2 transition-all -mb-px shrink-0 ${activeTab === tab ? 'border-indigo-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
+                                {tab === 'qa' ? 'Q&A' : tab}
                             </button>
                         ))}
                     </div>
@@ -531,12 +547,80 @@ const CourseDetail = () => {
                             </motion.div>
                         )}
 
+                        {activeTab === 'syllabus' && course?.syllabus?.length > 0 && (
+                            <motion.div key="syllabus" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
+                                className="space-y-6 pb-16">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2"><BookOpen size={18} className="text-indigo-400" />Course Syllabus</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    {course.syllabus.map((topic, tIdx) => (
+                                        <div key={topic._id || tIdx} className="bg-slate-900/40 border border-white/[0.06] rounded-2xl p-6">
+                                            <h4 className="text-base font-bold text-slate-200 mb-2">{topic.title}</h4>
+                                            {topic.description && <p className="text-sm text-slate-400 mb-4">{topic.description}</p>}
+                                            {topic.subTopics?.length > 0 && (
+                                                <div className="space-y-3 mt-4">
+                                                    {topic.subTopics.map((sub, sIdx) => (
+                                                        <div key={sub._id || sIdx} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                                                            <h5 className="font-semibold text-slate-300 text-sm">{sub.title}</h5>
+                                                            {sub.description && <p className="text-xs text-slate-500 mt-1">{sub.description}</p>}
+                                                            {sub.subTopics?.length > 0 && (
+                                                                <ul className="mt-3 space-y-2 pl-4 border-l-2 border-slate-600/50">
+                                                                    {sub.subTopics.map((ss, ssIdx) => (
+                                                                        <li key={ss._id || ssIdx} className="text-xs text-slate-400">
+                                                                            <span className="font-medium text-slate-300">{ss.title}</span>
+                                                                            {ss.description && <span className="text-slate-500 ml-1">- {ss.description}</span>}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+
                         {(activeTab === 'qa' || activeTab === 'notes') && (
                             <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                                 className="flex flex-col items-center justify-center py-24 text-slate-600 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
                                 <MessageCircle size={40} className="mb-4 opacity-20" />
                                 <p className="font-semibold text-sm">{activeTab === 'qa' ? 'Q&A coming soon' : 'Notes feature coming soon'}</p>
                                 <p className="text-xs mt-1 opacity-70">This feature is under development</p>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'tutorials' && (
+                            <motion.div key="tutorials" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                                {course.tutorialLinks?.length > 0 ? (
+                                    <>
+                                        <h3 className="text-lg font-bold text-white mb-4">Extra Learning Resources</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {course.tutorialLinks.map((link, idx) => (
+                                                <a key={idx} href={link.url?.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noreferrer"
+                                                    className="p-5 rounded-2xl bg-slate-900/40 border border-white/[0.06] hover:bg-slate-800/40 transition-colors flex flex-col gap-2 group">
+                                                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                                                        <MonitorPlay size={20} className="text-indigo-400" />
+                                                    </div>
+                                                    <h4 className="text-white font-bold text-sm group-hover:text-indigo-300 transition-colors">{link.title}</h4>
+                                                    <p className="text-slate-400 text-xs line-clamp-2 leading-relaxed flex-1">{link.description || 'Watch tutorial external resource'}</p>
+                                                    <span className="text-indigo-400 text-xs font-semibold mt-2 group-hover:text-indigo-300 flex items-center gap-1.5">
+                                                        Watch Tutorial <span className="font-mono">↗</span>
+                                                    </span>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-24 text-slate-600 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
+                                        <MonitorPlay size={40} className="mb-4 opacity-20" />
+                                        <p className="font-semibold text-sm">No extra tutorials available</p>
+                                        <p className="text-xs mt-1 opacity-70">The instructor has not added extra tutorial links</p>
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>

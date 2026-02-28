@@ -64,7 +64,8 @@ const createCourse = async (req, res) => {
   try {
     const {
       title, description, price, category, status,
-      thumbnail, sections, syllabus, level, learningPoints, requirements
+      thumbnail, sections, syllabus, level, learningPoints, requirements,
+      pointsRequired, subtitle, tags, language, discountPrice
     } = req.body;
 
     const newCourse = new Course({
@@ -79,7 +80,12 @@ const createCourse = async (req, res) => {
       learningPoints,
       requirements,
       sections: sections || [],
-      syllabus: syllabus || []
+      syllabus: syllabus || [],
+      pointsRequired: pointsRequired || 0,
+      subtitle: subtitle || '',
+      tags: tags || [],
+      language: language || 'English',
+      discountPrice: discountPrice || undefined,
     });
 
     const createdCourse = await newCourse.save();
@@ -115,6 +121,9 @@ const updateCourse = async (req, res) => {
       course.level = req.body.level || course.level;
       course.learningPoints = req.body.learningPoints || course.learningPoints;
       course.requirements = req.body.requirements || course.requirements;
+      if (req.body.pointsRequired !== undefined) course.pointsRequired = req.body.pointsRequired;
+      if (req.body.subtitle !== undefined) course.subtitle = req.body.subtitle;
+      if (req.body.discountPrice !== undefined) course.discountPrice = req.body.discountPrice;
 
       // Full Replace for sections (curriculum) and syllabus
       if (req.body.sections !== undefined) {

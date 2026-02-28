@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Course = require('../models/Course');
+const StudentCertificate = require('../models/StudentCertificate');
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
@@ -170,9 +171,76 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDENT CERTIFICATE MANAGEMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /api/admin/student-certs
+const getAllStudentCertificates = async (req, res) => {
+    try {
+        const certs = await StudentCertificate.find({})
+            .populate('student', 'name email avatar')
+            .populate('certificateProgram', 'title genre thumbnail points')
+            .populate('approvedBy', 'name')
+            .sort({ createdAt: -1 });
+        res.json(certs);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// PUT /api/admin/student-certs/:id/approve
+const approveStudentCertificate = async (req, res) => {
+    try {
+        const cert = await StudentCertificate.findById(req.params.id)
+            .populate('certificateProgram', 'title points');
+        if (!cert) return res.status(404).json({ message: 'Certificate not found' });
+        if (cert.status === 'approved') return res.status(400).json({ message: 'Already approved' });
+
+        const pointsToAward = cert.certificateProgram?.points || 50;
+
+        cert.status = 'approved';
+        cert.pointsAwarded = pointsToAward;
+        cert.approvedBy = req.user._id;
+        cert.approvedAt = new Date();
+        cert.adminNote = req.body.note || '';
+        await cert.save();
+
+        // Award points to student
+        await User.findByIdAndUpdate(cert.student, {
+            $inc: { profilePoints: pointsToAward }
+        });
+
+        res.json({
+            message: `Certificate approved! ${pointsToAward} points awarded to student.`,
+            cert
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// PUT /api/admin/student-certs/:id/reject
+const rejectStudentCertificate = async (req, res) => {
+    try {
+        const cert = await StudentCertificate.findById(req.params.id);
+        if (!cert) return res.status(404).json({ message: 'Certificate not found' });
+
+        cert.status = 'rejected';
+        cert.adminNote = req.body.note || 'Does not meet requirements';
+        cert.approvedBy = req.user._id;
+        await cert.save();
+
+        res.json({ message: 'Certificate rejected', cert });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     isAdmin,
     getPendingInstructors, getAllInstructors, approveInstructor, rejectInstructor,
     getPendingCourses, getAllCourses, approveCourse, rejectCourse,
-    getPlatformStats, getAllUsers
+    getPlatformStats, getAllUsers,
+    getAllStudentCertificates, approveStudentCertificate, rejectStudentCertificate
 };

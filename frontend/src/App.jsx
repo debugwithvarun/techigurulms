@@ -12,6 +12,7 @@ import SignupPage from "./page/Signup";
 import LoginPage from "./page/Login";
 import TutorDashboard from "./page/TutorDashbaord";
 import AdminDashboard from "./page/AdminDashboard";
+import StudentDashboard from "./page/StudentDashboard";
 import AboutPage from "./page/About";
 import Active from "./page/Active";
 import Inactive from "./page/Inactive";
@@ -85,6 +86,7 @@ function App() {
 
             {/* PROTECTED ROUTES */}
             <Route path="/dashboard" element={<PrivateRoute><TutorDashboard /></PrivateRoute>} />
+            <Route path="/student-dashboard" element={<PrivateRoute><StudentDashboard /></PrivateRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
             {/* 404 */}
