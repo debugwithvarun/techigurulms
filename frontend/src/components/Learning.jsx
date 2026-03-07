@@ -137,12 +137,14 @@ const LearningSection = () => {
             <div className="mt-8 flex items-center gap-4">
               <div className="flex -space-x-2.5">
                 {[
-                  'https://i.pravatar.cc/150?u=a01',
-                  'https://i.pravatar.cc/150?u=a02',
-                  'https://i.pravatar.cc/150?u=a03',
-                  'https://i.pravatar.cc/150?u=a04',
-                ].map((src, i) => (
-                  <img key={i} src={src} alt="" className="w-8 h-8 rounded-full border-2 border-white object-cover" />
+                  { initials: 'RS', bg: 'bg-purple-600' },
+                  { initials: 'AK', bg: 'bg-indigo-600' },
+                  { initials: 'PM', bg: 'bg-emerald-600' },
+                  { initials: 'SG', bg: 'bg-orange-500' },
+                ].map((a, i) => (
+                  <div key={i} className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-white text-[10px] font-black ${a.bg}`}>
+                    {a.initials}
+                  </div>
                 ))}
               </div>
               <div>

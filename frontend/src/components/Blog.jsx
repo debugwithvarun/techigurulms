@@ -3,37 +3,47 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowRight, User, Tag } from 'lucide-react';
 
+// Author initials avatars — no external placeholder images
+const AuthorAvatar = ({ initials, color }) => (
+  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0 ${color}`}>
+    {initials}
+  </div>
+);
+
 const blogs = [
   {
-    category: 'Degree',
-    date: 'Sep 13, 2025',
+    category: 'Career Tips',
+    date: 'Jan 15, 2026',
     readTime: '5 Min Read',
-    title: 'The Future of Remote Work: Trending Now',
-    desc: 'Explore how remote work methodologies are reshaping the educational landscape and degree programs globally.',
+    title: 'How to Land Your First Tech Job: A Complete Guide',
+    desc: 'Practical strategies for freshers looking to break into the IT industry — from resume building to cracking technical interviews.',
     img: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80',
-    author: 'Sarah Jenkins',
-    authorImg: 'https://i.pravatar.cc/150?u=1'
+    author: 'Techiguru Team',
+    authorInitials: 'TG',
+    authorColor: 'bg-purple-600',
   },
   {
-    category: 'University',
-    date: 'Nov 29, 2025',
+    category: 'Full Stack',
+    date: 'Feb 10, 2026',
     readTime: '8 Min Read',
-    title: 'The Psychology of Learning: Cognitive Growth',
-    desc: 'Understanding the deep connection between cognitive development and modern university teaching standards.',
+    title: 'MERN Stack vs MEAN Stack: Which Should You Learn in 2026?',
+    desc: 'A detailed comparison of the two most popular full-stack frameworks to help you make the right career choice.',
     img: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80',
-    author: 'Dr. Mark Lee',
-    authorImg: 'https://i.pravatar.cc/150?u=2'
+    author: 'Varun Chauhan',
+    authorInitials: 'VC',
+    authorColor: 'bg-indigo-600',
   },
   {
-    category: 'Developer',
-    date: 'Dec 29, 2025',
+    category: 'Interview Prep',
+    date: 'Mar 01, 2026',
     readTime: '6 Min Read',
-    title: 'Crafting Compelling Presentations: Design',
-    desc: 'Master the art of visual storytelling and learn how to keep your audience engaged from start to finish.',
+    title: 'Top 50 DSA Questions Asked in Product-Based Companies',
+    desc: 'Curated list of the most frequently asked Data Structures & Algorithms interview questions at top tech companies.',
     img: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&q=80',
-    author: 'Alex Morgan',
-    authorImg: 'https://i.pravatar.cc/150?u=3'
-  }
+    author: 'Uday Bhatnagar',
+    authorInitials: 'UB',
+    authorColor: 'bg-emerald-600',
+  },
 ];
 
 const Blog = () => {
@@ -142,7 +152,7 @@ const Blog = () => {
                 {/* Footer: Author & Link */}
                 <div className="mt-auto pt-6 border-t border-gray-50 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <img src={blog.authorImg} alt={blog.author} className="w-8 h-8 rounded-full border border-gray-100" />
+                    <AuthorAvatar initials={blog.authorInitials} color={blog.authorColor} />
                     <span className="text-sm font-bold text-slate-700">{blog.author}</span>
                   </div>
                   

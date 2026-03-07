@@ -6,8 +6,13 @@ import {
   BookOpen, Heart, TrendingUp, CheckCircle, Mail, ArrowRight, Star
 } from 'lucide-react';
 
+import uday from '../assets/uday.png';
+import varun from '../assets/varun.png';
+import pawan from '../assets/pawan.png';
+import anajali from '../assets/anajali.png';
+
 const STATS = [
-  { value: '50K+', label: 'Active Learners', icon: Users },
+  { value: '15,000+', label: 'Active Learners', icon: Users },
   { value: '200+', label: 'Expert Courses', icon: BookOpen },
   { value: '95%', label: 'Completion Rate', icon: TrendingUp },
   { value: '40+', label: 'Countries Reached', icon: Globe },
@@ -21,12 +26,31 @@ const VALUES = [
 ];
 
 const TEAM = [
-  { name: 'Varun Chauhan', role: 'Founder & CEO', img: 'https://i.pravatar.cc/150?u=varun', bio: 'Passionate educator with 10+ years in tech training.' },
-  { name: 'Priya Sharma', role: 'Head of Curriculum', img: 'https://i.pravatar.cc/150?u=priya', bio: 'Former professor turned edtech innovator.' },
-  { name: 'Rahul Mehta', role: 'Lead Instructor', img: 'https://i.pravatar.cc/150?u=rahul', bio: 'Full-stack developer with 8+ years at top startups.' },
-  { name: 'Anjali Singh', role: 'UX Director', img: 'https://i.pravatar.cc/150?u=anjali', bio: 'Designing learning experiences students love.' },
+  { 
+    name: 'Pawan Sharma', 
+    role: 'Managing Director', 
+    img: pawan, 
+    bio: 'Leads the organization with strategic vision, driving growth, partnerships, and long-term business development.' 
+  },
+  { 
+    name: 'Anjali Sharma', 
+    role: 'Director of Human Resources', 
+    img: anajali, 
+    bio: 'Oversees talent acquisition, employee engagement, and organizational culture while managing HR policies and operations.' 
+  },
+  { 
+    name: 'Varun Chauhan', 
+    role: 'Chief Technology Officer', 
+    img: varun, 
+    bio: 'Heads the technology division, responsible for product architecture, platform development, and technical innovation.' 
+  },
+  { 
+    name: 'Uday Bhatnagar', 
+    role: 'Full Stack Lead', 
+    img: uday, 
+    bio: 'Leads full-stack development, supervising frontend and backend engineering while ensuring scalable and efficient solutions.' 
+  },
 ];
-
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
   whileInView: { opacity: 1, y: 0 },
@@ -91,9 +115,9 @@ const AboutPage = () => (
           <p className="text-gray-500 leading-relaxed mb-4">
             TechiGuru started in 2022 with a simple belief: <strong>professional skills shouldn't be locked behind expensive degrees.</strong> After spending years in the tech industry, our founders saw firsthand how the right training could transform careers.
           </p>
-          <p className="text-gray-500 leading-relaxed mb-6">
-            From a small studio in Delhi to a platform reaching thousands of learners across 40+ countries, we've grown because we obsess over one thing — <strong>your success as a learner.</strong>
-          </p>
+            <p className="text-gray-500 leading-relaxed mb-6">
+              From a small studio in Ghaziabad to a platform reaching thousands of learners across India, we've grown because we obsess over one thing — <strong>your success as a learner.</strong>
+            </p>
           <div className="space-y-3">
             {['Instructor-led, project-based learning', 'Industry-recognized certifications', 'Lifetime access to course materials', 'Active community of learners'].map((p, i) => (
               <div key={i} className="flex items-center gap-3 text-sm text-gray-700"><CheckCircle size={16} className="text-green-500 shrink-0" /> {p}</div>
@@ -165,7 +189,7 @@ const AboutPage = () => (
     <section className="py-20" style={{ background: 'linear-gradient(135deg, #a435f0, #7c3aed)' }}>
       <div className="max-w-3xl mx-auto px-6 text-center">
         <motion.h2 {...fadeUp()} className="text-4xl font-black text-white mb-4">Ready to Start Learning?</motion.h2>
-        <motion.p {...fadeUp(0.05)} className="text-purple-200 mb-8">Join 50,000+ learners who are transforming their careers with TechiGuru.</motion.p>
+        <motion.p {...fadeUp(0.05)} className="text-purple-200 mb-8">Join 15,000+ learners who are transforming their careers with TechiGuru.</motion.p>
         <motion.div {...fadeUp(0.1)} className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/active-course" className="px-8 py-3.5 rounded-xl bg-white text-purple-700 font-bold text-sm hover:shadow-lg transition-shadow flex items-center gap-2 justify-center">
             <BookOpen size={16} /> Explore Courses

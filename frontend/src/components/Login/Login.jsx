@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../api/axios';
 import {
     Eye, EyeOff, Loader2, Mail, Lock, ArrowRight,
-    GraduationCap, Shield, Zap, BookOpen, CheckCircle, ChevronLeft, KeyRound
+    GraduationCap, Shield, Zap, BookOpen, CheckCircle, ChevronLeft, KeyRound,
+    User, Users
 } from 'lucide-react';
 
 // Animated feature pill
@@ -21,7 +22,7 @@ const FeaturePill = ({ icon: Icon, text, delay }) => (
 
 // ── Verify Account Panel (OTP flow for unverified users) ─────────────────────
 const VerifyAccountPanel = ({ prefillEmail, onBack }) => {
-    const [step, setStep] = useState('email'); // 'email' | 'otp' | 'done'
+    const [step, setStep] = useState('email');
     const [email, setEmail] = useState(prefillEmail || '');
     const [otp, setOtp] = useState('');
     const [loading, setLoading] = useState(false);
@@ -139,6 +140,34 @@ const VerifyAccountPanel = ({ prefillEmail, onBack }) => {
     );
 };
 
+// ── Role Tab ──────────────────────────────────────────────────────────────────
+const RoleTab = ({ role, selected, onClick }) => {
+    const cfg = {
+        student: { icon: GraduationCap, label: 'Student', desc: 'Continue learning' },
+        instructor: { icon: Users, label: 'Instructor', desc: 'Manage your courses' },
+    }[role];
+    const Icon = cfg.icon;
+    return (
+        <button
+            type="button"
+            onClick={() => onClick(role)}
+            className={`flex-1 flex items-center gap-2.5 px-4 py-3 rounded-xl border transition-all ${
+                selected
+                    ? 'border-indigo-500/60 bg-indigo-500/10 text-white'
+                    : 'border-white/[0.08] text-slate-500 hover:border-white/20 hover:text-slate-300'
+            }`}
+        >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${selected ? 'bg-indigo-500/20' : 'bg-white/5'}`}>
+                <Icon size={15} className={selected ? 'text-indigo-400' : 'text-slate-500'} />
+            </div>
+            <div className="text-left min-w-0">
+                <p className="font-bold text-sm leading-none">{cfg.label}</p>
+                <p className={`text-[10px] mt-0.5 ${selected ? 'text-slate-400' : 'text-slate-600'}`}>{cfg.desc}</p>
+            </div>
+        </button>
+    );
+};
+
 // ── Main Login Component ──────────────────────────────────────────────────────
 const Login = () => {
     const { login } = useAuth();
@@ -146,6 +175,7 @@ const Login = () => {
     const [searchParams] = useSearchParams();
     const redirectTo = searchParams.get('redirect') || '/';
 
+    const [loginAs, setLoginAs] = useState('student'); // 'student' | 'instructor'
     const [form, setForm] = useState({ email: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -153,20 +183,23 @@ const Login = () => {
     const [showVerifyPanel, setShowVerifyPanel] = useState(false);
     const [unverifiedEmail, setUnverifiedEmail] = useState('');
 
-    const handleChange = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+    const handleChange = e => { setError(''); setForm(p => ({ ...p, [e.target.name]: e.target.value })); };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
         try {
-            const result = await login(form.email, form.password);
+            const result = await login(form.email, form.password, loginAs);
             if (result?.success) {
-                navigate(redirectTo, { replace: true });
+                // Role-based redirect
+                const dest = result.user?.role === 'instructor' || result.user?.role === 'admin'
+                    ? '/dashboard'
+                    : redirectTo === '/' ? '/student-dashboard' : redirectTo;
+                navigate(dest, { replace: true });
             } else {
                 const msg = result?.message || 'Invalid email or password';
                 setError(msg);
-                // If unverified, prefill email for verify panel
                 if (msg.toLowerCase().includes('verify')) {
                     setUnverifiedEmail(form.email);
                 }
@@ -186,14 +219,12 @@ const Login = () => {
 
     return (
         <div className="min-h-screen flex font-sans bg-[#05070f]">
-            {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
+            {/* ── LEFT PANEL ────────────────────────────────────────────── */}
             <div className="hidden lg:flex flex-col justify-between w-1/2 xl:w-[55%] relative overflow-hidden p-14">
-                {/* Gradient background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#0c0e24] via-[#111436] to-[#0a0c20]" />
                 <div className="absolute top-0 left-0 w-full h-full">
                     <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-3xl" />
                     <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-purple-600/15 rounded-full blur-3xl" />
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-3xl" />
                 </div>
                 <div className="absolute inset-0 opacity-[0.03]"
                     style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
@@ -233,7 +264,6 @@ const Login = () => {
                     </motion.div>
                 </div>
 
-                {/* Testimonial */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
                     className="relative z-10 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-5">
                     <div className="flex gap-1 mb-3">
@@ -252,7 +282,7 @@ const Login = () => {
                 </motion.div>
             </div>
 
-            {/* ── RIGHT PANEL ─────────────────────────────────────────────── */}
+            {/* ── RIGHT PANEL ──────────────────────────────────────────── */}
             <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-[#08090f] relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(99,102,241,0.06),transparent_60%)]" />
 
@@ -275,9 +305,18 @@ const Login = () => {
                                 <span className="text-white font-bold">TechiGuru</span>
                             </div>
 
-                            <div className="mb-8">
+                            <div className="mb-6">
                                 <h2 className="text-3xl font-black text-white tracking-tight">Sign in</h2>
                                 <p className="text-slate-500 mt-2 text-sm">Don't have an account? <Link to="/signup" className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">Sign up →</Link></p>
+                            </div>
+
+                            {/* ── Role Selector ── */}
+                            <div className="mb-6">
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">I am signing in as</p>
+                                <div className="flex gap-3">
+                                    <RoleTab role="student" selected={loginAs === 'student'} onClick={setLoginAs} />
+                                    <RoleTab role="instructor" selected={loginAs === 'instructor'} onClick={setLoginAs} />
+                                </div>
                             </div>
 
                             <AnimatePresence>
@@ -287,7 +326,6 @@ const Login = () => {
                                         <div className="flex items-center gap-2 mb-1">
                                             <span>⚠</span> {error}
                                         </div>
-                                        {/* Show verify link if the error mentions verification */}
                                         {(error.toLowerCase().includes('verify') || error.toLowerCase().includes('verif')) && (
                                             <button onClick={openVerify}
                                                 className="text-xs font-bold text-amber-400 hover:text-amber-300 underline underline-offset-2 transition-colors mt-1">

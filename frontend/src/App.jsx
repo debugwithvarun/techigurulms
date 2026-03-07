@@ -21,6 +21,10 @@ import CourseDetail from "./components/Course/CourseDetail";
 import CourseMarketing from "./page/CourseMarketing";
 import CertificatesPage from "./page/CertificatesPage";
 import VerifyEmailPage from "./page/VerifyEmail";
+import PrivacyPolicy from "./page/PrivacyPage";
+import TermsConditions from "./page/TermsConditions";
+import HelpCentre from "./page/HelpCentre";
+import AdminLoginPage from "./components/Login/AdminLogin";
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
@@ -73,6 +77,9 @@ function App() {
               <Route path="/inactive-course" element={<Inactive />} />
               <Route path="/active-certificates" element={<CertificatesPage />} />
               <Route path="/inactive-certificates" element={<CertificatesPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-conditions" element={<TermsConditions />} />
+              <Route path="/help-centre" element={<HelpCentre />} />
             </Route>
 
             {/* COURSE - Public marketing page with Navbar */}
@@ -87,6 +94,8 @@ function App() {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
+            {/* Hidden admin login — not linked in UI */}
+            <Route path="/secure-admin-signin" element={<AdminLoginPage />} />
 
             {/* PROTECTED ROUTES */}
             <Route path="/dashboard" element={<PrivateRoute><TutorDashboard /></PrivateRoute>} />

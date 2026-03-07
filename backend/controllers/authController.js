@@ -128,7 +128,7 @@ const registerUser = async (req, res) => {
 // ── Login ─────────────────────────────────────────────────────────────────────
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, loginAs } = req.body;
     if (!email || !password) return res.status(400).json({ message: 'Please provide email and password' });
 
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
@@ -139,6 +139,18 @@ const loginUser = async (req, res) => {
     // Block unverified accounts (only if they came through the OTP flow)
     if (!user.isEmailVerified && user.name) {
       return res.status(401).json({ message: 'Please verify your email before logging in.' });
+    }
+
+    // ── Role mismatch check ────────────────────────────────────────────────────
+    if (loginAs === 'student' && (user.role === 'instructor' || user.role === 'admin')) {
+      return res.status(403).json({
+        message: `This account is registered as an ${user.role}. Please use the ${user.role === 'admin' ? 'Admin' : 'Instructor'} login.`
+      });
+    }
+    if (loginAs === 'instructor' && user.role !== 'instructor' && user.role !== 'admin') {
+      return res.status(403).json({
+        message: 'This account is registered as a student. Please use the Student login.'
+      });
     }
 
     user.lastLogin = new Date();
@@ -154,6 +166,7 @@ const loginUser = async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 };
+
 
 // ── Forgot Password — Send OTP ────────────────────────────────────────────────
 const forgotPassword = async (req, res) => {

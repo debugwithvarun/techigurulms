@@ -7,7 +7,7 @@ import {
     Users, BookOpen, TrendingUp, Clock, CheckCircle, XCircle, Eye,
     BarChart3, GraduationCap, AlertCircle, RefreshCw, Medal, ChevronRight,
     IndianRupee, Shield, UserCheck, Search, Filter, LogOut, Menu, X,
-    Upload, Award, Star, FileText, ExternalLink, MailCheck, Send, ShieldAlert
+    Upload, Award, Star, FileText, ExternalLink, MailCheck, Send, ShieldAlert, MessageSquare, Eye as EyeIcon
 } from 'lucide-react';
 import { getImageUrl } from '../config';
 
@@ -44,10 +44,12 @@ const AdminDashboard = () => {
     const [studentCerts, setStudentCerts] = useState([]);
     const [certNote, setCertNote] = useState({});
     const [unverifiedUsers, setUnverifiedUsers] = useState([]);
+    const [contacts, setContacts] = useState([]);
     const [resendStatus, setResendStatus] = useState({}); // per-user status
     const [bulkLoading, setBulkLoading] = useState(false);
     const [bulkResult, setBulkResult] = useState(null);
     const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+    const [previewCourse, setPreviewCourse] = useState(null); // for course preview modal
 
     // Auth guard
     useEffect(() => {
@@ -60,7 +62,7 @@ const AdminDashboard = () => {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const [statsRes, pendingInstRes, pendingCoursesRes, usersRes, coursesRes, certRes, unverifiedRes] = await Promise.all([
+            const [statsRes, pendingInstRes, pendingCoursesRes, usersRes, coursesRes, certRes, unverifiedRes, contactsRes] = await Promise.all([
                 api.get('/admin/stats'),
                 api.get('/admin/instructors/pending'),
                 api.get('/admin/courses/pending'),
@@ -68,6 +70,7 @@ const AdminDashboard = () => {
                 api.get('/admin/courses'),
                 api.get('/admin/student-certs'),
                 api.get('/admin/users/unverified'),
+                api.get('/contact'),
             ]);
             setStats(statsRes.data);
             setPendingInstructors(pendingInstRes.data);
@@ -76,6 +79,7 @@ const AdminDashboard = () => {
             setAllCourses(coursesRes.data);
             setStudentCerts(certRes.data);
             setUnverifiedUsers(unverifiedRes.data.users || []);
+            setContacts(contactsRes.data?.data || []);
         } catch (err) { console.error(err); }
         setLoading(false);
     }, []);
@@ -148,11 +152,19 @@ const AdminDashboard = () => {
         setBulkLoading(false);
     };
 
+    const handleMarkContactRead = async (id) => {
+        try {
+            await api.patch(`/contact/${id}/read`);
+            setContacts(prev => prev.map(c => c._id === id ? { ...c, status: 'read' } : c));
+        } catch (e) { console.error(e); }
+    };
+
     const TABS = [
         { id: 'overview', label: 'Overview', icon: BarChart3 },
         { id: 'instructors', label: 'Instructors', icon: UserCheck, badge: pendingInstructors.length },
         { id: 'courses', label: 'Courses', icon: BookOpen, badge: pendingCourses.length },
         { id: 'students', label: 'Students', icon: Users },
+        { id: 'contacts', label: 'Contacts', icon: MessageSquare, badge: contacts.filter(c => c.status === 'unread').length || null },
         { id: 'unverified', label: 'Unverified', icon: ShieldAlert, badge: unverifiedUsers.length },
         { id: 'student-certs', label: 'Student Certs', icon: Award, badge: studentCerts.filter(c => c.status === 'pending').length },
         { id: 'analytics', label: 'Analytics', icon: TrendingUp },
@@ -442,7 +454,9 @@ const AdminDashboard = () => {
                                                     <td className="px-5 py-3">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-14 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                                                                {course.thumbnail?.url && <img src={course.thumbnail.url} className="w-full h-full object-cover" alt="" />}
+                                                                {course.thumbnail &&
+                                                                    <img src={getImageUrl(course.thumbnail?.url || course.thumbnail)} className="w-full h-full object-cover" alt="" />
+                                                                }
                                                             </div>
                                                             <p className="font-semibold text-gray-800 truncate max-w-[200px]">{course.title}</p>
                                                         </div>
@@ -456,6 +470,7 @@ const AdminDashboard = () => {
                                                         </span>
                                                     </td>
                                                     <td className="px-5 py-3 text-right">
+                                                        <button onClick={() => setPreviewCourse(course)} className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-semibold rounded-lg hover:bg-blue-100 mr-1.5">Preview</button>
                                                         {course.approvalStatus !== 'approved' && (
                                                             <button onClick={() => handleApproveCourse(course._id)} className="px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 mr-1.5">Publish</button>
                                                         )}
@@ -618,6 +633,59 @@ const AdminDashboard = () => {
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* CONTACTS TAB */}
+                    {activeTab === 'contacts' && (
+                        <div className="space-y-5 max-w-6xl">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-900">Contact Messages</h2>
+                                    <p className="text-sm text-gray-500 mt-0.5">{contacts.length} message{contacts.length !== 1 ? 's' : ''} received. {contacts.filter(c => c.status === 'unread').length} unread.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                {contacts.length === 0 ? (
+                                    <div className="py-14 text-center">
+                                        <MessageSquare size={36} className="mx-auto mb-3 text-gray-300" />
+                                        <p className="font-semibold text-gray-700">No messages yet</p>
+                                        <p className="text-sm text-gray-400 mt-1">Contact form submissions will appear here.</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-50">
+                                        {contacts.map(c => (
+                                            <div key={c._id} className={`p-5 transition-colors ${c.status === 'unread' ? 'bg-purple-50/40' : 'hover:bg-gray-50'}`}>
+                                                <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                            <p className="font-bold text-gray-900 text-sm">{c.name}</p>
+                                                            <span className="text-xs text-gray-400">{c.email}</span>
+                                                            <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                                                c.status === 'unread' ? 'bg-purple-100 text-purple-700' :
+                                                                c.status === 'replied' ? 'bg-green-100 text-green-700' :
+                                                                'bg-gray-100 text-gray-500'
+                                                            }`}>{c.status}</span>
+                                                        </div>
+                                                        <p className="text-sm font-semibold text-gray-700 mb-1">📌 {c.subject}</p>
+                                                        <p className="text-sm text-gray-500 leading-relaxed line-clamp-3">{c.message}</p>
+                                                        <p className="text-xs text-gray-400 mt-2">{new Date(c.createdAt).toLocaleString('en-IN')}</p>
+                                                    </div>
+                                                    {c.status === 'unread' && (
+                                                        <button
+                                                            onClick={() => handleMarkContactRead(c._id)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-semibold rounded-lg hover:bg-purple-100 transition-colors shrink-0"
+                                                        >
+                                                            <MailCheck size={13} /> Mark Read
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
@@ -829,4 +897,128 @@ const AdminDashboard = () => {
     );
 };
 
+/* ── Course Preview Modal ─────────────────────────────────────────────────── */
+const CoursePreviewModal = ({ course, onClose, onApprove, onReject, actionLoading }) => {
+    if (!course) return null;
+    const { getImageUrl: _gi } = require('../config') || {};
+    const imgUrl = course.thumbnail?.url || course.thumbnail;
+    const fullImgUrl = imgUrl
+        ? (imgUrl.startsWith('http') ? imgUrl : `https://api.techiguru.in${imgUrl}`)
+        : null;
+    const totalLessons = course.sections?.reduce((a, s) => a + (s.lessons?.length || 0), 0) || 0;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div
+                className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+                    <h2 className="font-bold text-gray-900 text-lg truncate pr-4">{course.title}</h2>
+                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500">
+                        <X size={18} />
+                    </button>
+                </div>
+
+                {/* Thumbnail */}
+                {fullImgUrl && (
+                    <div className="w-full h-52 bg-gray-100 overflow-hidden">
+                        <img src={fullImgUrl} alt={course.title} className="w-full h-full object-cover" />
+                    </div>
+                )}
+
+                <div className="p-6 space-y-5">
+                    {/* Meta row */}
+                    <div className="flex flex-wrap gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${course.approvalStatus === 'approved' ? 'bg-green-50 text-green-700' : course.approvalStatus === 'rejected' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>
+                            {course.approvalStatus || 'pending'}
+                        </span>
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">{course.category}</span>
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700">{course.level || 'All Levels'}</span>
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">
+                            {course.price === 0 ? 'Free' : `₹${Number(course.price).toLocaleString('en-IN')}`}
+                        </span>
+                    </div>
+
+                    {/* Instructor */}
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center font-bold text-purple-700 text-sm shrink-0">
+                            {(course.instructor?.name || 'I')[0].toUpperCase()}
+                        </div>
+                        <div>
+                            <p className="font-semibold text-gray-800 text-sm">{course.instructor?.name || 'Unknown Instructor'}</p>
+                            <p className="text-xs text-gray-500">{course.instructor?.email}</p>
+                        </div>
+                    </div>
+
+                    {/* Description */}
+                    {course.description && (
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-700 mb-1.5">Description</h3>
+                            <p className="text-sm text-gray-600 leading-relaxed">{course.description}</p>
+                        </div>
+                    )}
+
+                    {/* Sections */}
+                    {course.sections?.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-700 mb-2.5">
+                                Curriculum — {course.sections.length} sections · {totalLessons} lessons
+                            </h3>
+                            <div className="space-y-2">
+                                {course.sections.map((sec, i) => (
+                                    <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
+                                        <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50">
+                                            <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center shrink-0">{i + 1}</span>
+                                            <p className="font-semibold text-gray-800 text-sm">{sec.title}</p>
+                                            <span className="ml-auto text-xs text-gray-400">{sec.lessons?.length || 0} lessons</span>
+                                        </div>
+                                        {sec.lessons?.length > 0 && (
+                                            <ul className="divide-y divide-gray-50">
+                                                {sec.lessons.map((les, j) => (
+                                                    <li key={j} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600">
+                                                        <span className="text-gray-300 text-xs w-4">{j + 1}.</span>
+                                                        <BookOpen size={12} className="text-blue-400 shrink-0" />
+                                                        <span className="truncate">{les.title}</span>
+                                                        {les.isFree && <span className="ml-auto text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">FREE</span>}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-2 border-t border-gray-100">
+                        {course.approvalStatus !== 'approved' && (
+                            <button
+                                onClick={() => { onApprove(course._id); onClose(); }}
+                                disabled={actionLoading === course._id}
+                                className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-sm transition-colors disabled:opacity-50"
+                            >
+                                {actionLoading === course._id ? 'Publishing...' : '✓ Approve & Publish'}
+                            </button>
+                        )}
+                        {course.approvalStatus !== 'rejected' && (
+                            <button
+                                onClick={() => { onReject(course._id, 'Quality standard not met'); onClose(); }}
+                                disabled={actionLoading === course._id + 'r'}
+                                className="flex-1 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl text-sm transition-colors disabled:opacity-50"
+                            >
+                                ✕ Reject
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default AdminDashboard;
+

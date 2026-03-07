@@ -2,7 +2,7 @@ const User = require('../models/User');
 const Course = require('../models/Course');
 const StudentCertificate = require('../models/StudentCertificate');
 const crypto = require('crypto');
-const { sendVerificationLinkEmail } = require('../utlis/emailService');
+const { sendVerificationLinkEmail, sendStatusChangeEmail } = require('../utlis/emailService');
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
@@ -49,6 +49,11 @@ const approveInstructor = async (req, res) => {
 
         user.instructorStatus = 'approved';
         await user.save({ validateModifiedOnly: true });
+
+        // Notify instructor via email
+        sendStatusChangeEmail(user.email, user.name, 'instructor', 'approved', 'Instructor Application')
+            .catch(err => console.error('Instructor approve email error:', err));
+
         res.json({ message: 'Instructor approved successfully', user: user.getPublicProfile() });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -63,6 +68,12 @@ const rejectInstructor = async (req, res) => {
 
         user.instructorStatus = 'rejected';
         await user.save({ validateModifiedOnly: true });
+
+        // Notify instructor via email
+        const reason = req.body.reason || 'Your application did not meet our current requirements.';
+        sendStatusChangeEmail(user.email, user.name, 'instructor', 'rejected', 'Instructor Application', reason)
+            .catch(err => console.error('Instructor reject email error:', err));
+
         res.json({ message: 'Instructor rejected', user: user.getPublicProfile() });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -100,15 +111,21 @@ const getAllCourses = async (req, res) => {
 // PUT /api/admin/courses/:id/approve
 const approveCourse = async (req, res) => {
     try {
-        const course = await Course.findById(req.params.id);
+        const course = await Course.findById(req.params.id).populate('instructor', 'name email');
         if (!course) return res.status(404).json({ message: 'Course not found' });
 
         course.approvalStatus = 'approved';
         course.approvedAt = new Date();
         course.approvedBy = req.user._id;
-        // Auto-set status to Active when approved
         if (course.status === 'Draft') course.status = 'Active';
         await course.save();
+
+        // Notify instructor/owner via email
+        if (course.instructor?.email) {
+            sendStatusChangeEmail(course.instructor.email, course.instructor.name, 'course', 'approved', course.title)
+                .catch(err => console.error('Course approve email error:', err));
+        }
+
         res.json({ message: 'Course approved and published', course });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -118,13 +135,21 @@ const approveCourse = async (req, res) => {
 // PUT /api/admin/courses/:id/reject
 const rejectCourse = async (req, res) => {
     try {
-        const course = await Course.findById(req.params.id);
+        const course = await Course.findById(req.params.id).populate('instructor', 'name email');
         if (!course) return res.status(404).json({ message: 'Course not found' });
 
+        const reason = req.body.reason || 'Does not meet quality standards';
         course.approvalStatus = 'rejected';
-        course.rejectionReason = req.body.reason || 'Does not meet quality standards';
+        course.rejectionReason = reason;
         course.status = 'Inactive';
         await course.save();
+
+        // Notify instructor/owner via email
+        if (course.instructor?.email) {
+            sendStatusChangeEmail(course.instructor.email, course.instructor.name, 'course', 'rejected', course.title, reason)
+                .catch(err => console.error('Course reject email error:', err));
+        }
+
         res.json({ message: 'Course rejected', course });
     } catch (err) {
         res.status(500).json({ message: err.message });

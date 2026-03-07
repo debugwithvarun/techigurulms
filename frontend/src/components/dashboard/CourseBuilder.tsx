@@ -139,9 +139,47 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ initialData, onSave, onCa
     const handleRemovePoint = (field: 'learningPoints' | 'requirements', idx: number) =>
         setCourseData(prev => ({ ...prev, [field]: (prev[field] || []).filter((_, i) => i !== idx) }));
 
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+    const validateAndSave = () => {
+        const errors: string[] = [];
+        if (!courseData.title.trim()) errors.push('Course title is required');
+        if (!courseData.thumbnail) errors.push('Course thumbnail is required');
+        if (courseData.topics.length === 0) errors.push('At least one section is required');
+        courseData.topics.forEach((topic, i) => {
+            if (!topic.title.trim()) errors.push(`Section ${i + 1} title is required`);
+            if (topic.videos.length === 0) errors.push(`Section "${topic.title || i + 1}" must have at least one lesson`);
+            topic.videos.forEach((v, j) => {
+                if (!v.title.trim()) errors.push(`Section "${topic.title || i + 1}", Lesson ${j + 1} title is required`);
+            });
+        });
+        if (errors.length > 0) {
+            setValidationErrors(errors);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        setValidationErrors([]);
+        onSave(courseData);
+    };
+
     return (
         <div className="max-w-5xl mx-auto pb-20 space-y-5">
+            {/* Validation Errors */}
+            {validationErrors.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4">
+                    <p className="text-sm font-bold text-red-700 mb-2">⚠ Please fix the following before saving:</p>
+                    <ul className="space-y-1">
+                        {validationErrors.map((e, i) => (
+                            <li key={i} className="text-sm text-red-600 flex items-start gap-1.5">
+                                <span className="shrink-0 mt-0.5">•</span> {e}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
             {/* Sticky Toolbar */}
+
             <div className="sticky top-0 z-30 bg-white border border-gray-200 rounded-xl px-5 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a435f0, #7c3aed)' }}>
@@ -170,7 +208,7 @@ const CourseBuilder: React.FC<CourseBuilderProps> = ({ initialData, onSave, onCa
                     <button onClick={onCancel} className="flex-1 sm:flex-none px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
                         Cancel
                     </button>
-                    <button onClick={() => onSave(courseData)} disabled={isSaving || uploading} className="flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-60 hover:opacity-90" style={{ background: 'linear-gradient(135deg, #a435f0, #7c3aed)' }}>
+                    <button onClick={validateAndSave} disabled={isSaving || uploading} className="flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-60 hover:opacity-90" style={{ background: 'linear-gradient(135deg, #a435f0, #7c3aed)' }}>
                         {isSaving ? <Loader size={15} className="animate-spin" /> : <Save size={15} />} Save Course
                     </button>
                 </div>

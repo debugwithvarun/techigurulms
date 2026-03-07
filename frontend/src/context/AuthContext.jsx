@@ -28,13 +28,13 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     // 2. Login
-    const login = async (email, password) => {
+    const login = async (email, password, loginAs = 'student') => {
         setError(null);
         try {
-            const { data } = await api.post('/auth/login', { email, password });
+            const { data } = await api.post('/auth/login', { email, password, loginAs });
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
-            return { success: true };
+            return { success: true, user: data };
         } catch (err) {
             const message = err.response?.data?.message || 'Login failed';
             setError(message);

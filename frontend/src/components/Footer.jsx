@@ -1,133 +1,188 @@
 import React from 'react';
-import { 
-  MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin, 
-  Send, ArrowRight, Globe 
+import { Link } from 'react-router-dom';
+import {
+  MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin, Youtube,
+  Clock
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
+  const companyLinks = [
+    { label: 'About Us', href: '/about' },
+    { label: 'Careers', href: '#' },
+    { label: 'Contact Us', href: '/contact' },
+    { label: 'Investors', href: '#' },
+    { label: 'Teams', href: '/about' },
+    { label: 'Our Partners', href: '#' },
+    { label: 'Our Story', href: '/about' },
+    { label: 'Testimonials', href: '#' },
+  ];
+
+  const resourceLinks = [
+    { label: 'Technical Q&A', href: '#' },
+    { label: 'Blogs', href: '#' },
+    { label: 'Sitemap', href: '#' },
+    { label: 'Help Center', href: '/help-centre' },
+    { label: 'Terms Of Service', href: '/terms-conditions' },
+    { label: 'Career Path', href: '/active-course' },
+    { label: 'Privacy & Policy', href: '/privacy-policy' },
+  ];
+
+  const socialLinks = [
+    { icon: Facebook, href: 'https://www.facebook.com/techiguruIN/', label: 'Facebook' },
+    { icon: Instagram, href: 'https://www.instagram.com/techiguruIN/', label: 'Instagram' },
+    { icon: Twitter, href: '#', label: 'Twitter' },
+    { icon: Linkedin, href: '#', label: 'LinkedIn' },
+    { icon: Youtube, href: '#', label: 'YouTube' },
+  ];
+
   return (
     <footer className="bg-[#0F172A] text-slate-300 relative overflow-hidden font-sans">
-      
+
       {/* Top Gradient Line */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600"></div>
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600" />
 
       {/* Decorative Background Glow */}
-      <div className="absolute top-[-50%] right-[-10%] w-[600px] h-[600px] bg-purple-900/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-[-50%] right-[-10%] w-[600px] h-[600px] bg-purple-900/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-[-5%] w-[400px] h-[400px] bg-indigo-900/15 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20 pt-20 pb-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
-          
-          {/* Column 1: Brand & Contact */}
+
+          {/* ── Column 1: Brand & Contact ───────────────────────── */}
           <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-purple-900/50">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/50 shrink-0">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
                 </svg>
               </div>
-              <span className="text-2xl font-bold text-white tracking-tight">TechiGuru</span>
+              <span className="text-2xl font-black text-white tracking-tight">TechiGuru</span>
             </div>
-            
+
             <p className="text-slate-400 leading-relaxed text-sm pr-4">
-              Empowering learners worldwide with cutting-edge technical skills. Join our community and shape your future today.
+              Empowering learners across India with cutting-edge technical skills, 
+              expert mentorship, and industry-recognized certifications. 
+              Your career transformation starts here.
             </p>
 
-            <div className="space-y-4 pt-2">
-              <div className="flex items-start gap-3 text-sm group cursor-pointer">
-                <MapPin size={18} className="text-purple-500 mt-0.5 group-hover:text-white transition-colors" /> 
-                <span className="group-hover:text-white transition-colors">C/54 Northwest Freeway, Suite 485, Houston, USA</span>
+            {/* Contact Info */}
+            <div className="space-y-3.5 pt-1">
+              <div className="flex items-start gap-3 text-sm group">
+                <MapPin size={17} className="text-purple-500 mt-0.5 shrink-0" />
+                <span className="text-slate-400 leading-snug">Ghaziabad, 201009<br />Uttar Pradesh, India</span>
               </div>
-              <div className="flex items-center gap-3 text-sm group cursor-pointer">
-                <Phone size={18} className="text-purple-500 group-hover:text-white transition-colors" /> 
-                <span className="group-hover:text-white transition-colors">+1 (525) 344-6885</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm group cursor-pointer">
-                <Mail size={18} className="text-purple-500 group-hover:text-white transition-colors" /> 
-                <span className="group-hover:text-white transition-colors">support@techiguru.com</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Column 2: Quick Links */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-6">Company</h3>
-            <ul className="space-y-3">
-              {['About Us', 'Our Courses', 'Instructors', 'Success Stories', 'Contact Us'].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-slate-400 hover:text-purple-400 hover:pl-2 transition-all duration-300 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 opacity-0 hover:opacity-100 transition-opacity"></span>
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 3: Resources */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-6">Resources</h3>
-            <ul className="space-y-3">
-              {['Help Center', 'Terms of Service', 'Privacy Policy', 'Career Path', 'Blog & News'].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-slate-400 hover:text-purple-400 hover:pl-2 transition-all duration-300 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 opacity-0 hover:opacity-100 transition-opacity"></span>
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4: Newsletter & App */}
-          <div>
-            <h3 className="text-white font-bold text-lg mb-6">Newsletter</h3>
-            <p className="text-sm text-slate-400 mb-4">Subscribe to get the latest updates and offers.</p>
-            
-            <div className="relative mb-8">
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 px-4 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder:text-slate-500"
-              />
-              <button className="absolute right-1.5 top-1.5 bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-md transition-colors">
-                <Send size={16} />
-              </button>
-            </div>
-
-            <h4 className="text-white font-semibold text-sm mb-4">Get the Mobile App</h4>
-            <div className="flex gap-3">
-               <button className="flex items-center gap-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 py-2 transition-all group w-full">
-                 <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Play Store" className="h-6 w-auto opacity-80 group-hover:opacity-100" />
-               </button>
-               <button className="flex items-center gap-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 py-2 transition-all group w-full">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="App Store" className="h-6 w-auto opacity-80 group-hover:opacity-100" />
-               </button>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Footer Bottom */}
-        <div className="border-t border-slate-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-500 text-sm">
-            © {currentYear} TechiGuru. All rights reserved.
-          </p>
-
-          <div className="flex gap-4">
-            {[Facebook, Twitter, Instagram, Linkedin].map((Icon, idx) => (
-              <a 
-                key={idx} 
-                href="#" 
-                className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-purple-600 hover:text-white transition-all duration-300 hover:-translate-y-1"
-              >
-                <Icon size={18} />
+              <a href="tel:+919368465315" className="flex items-center gap-3 text-sm group hover:text-white transition-colors">
+                <Phone size={17} className="text-purple-500 shrink-0 group-hover:text-purple-400 transition-colors" />
+                <span>+91 9368465315</span>
               </a>
-            ))}
+              <a href="mailto:info@techhubtechnology.com" className="flex items-center gap-3 text-sm group hover:text-white transition-colors">
+                <Mail size={17} className="text-purple-500 shrink-0 group-hover:text-purple-400 transition-colors" />
+                <span className="break-all">info@generativeaix.com</span>
+              </a>
+              {/* <div className="flex items-start gap-3 text-sm">
+                <Clock size={17} className="text-purple-500 shrink-0 mt-0.5" />
+                <span className="text-slate-400 leading-snug">Mon – Sat&nbsp;&nbsp;|&nbsp;&nbsp;10:00 AM – 6:00 PM (IST)</span>
+              </div> */}
+            </div>
+
+            {/* Social Links */}
+            <div className="flex gap-2.5 pt-1">
+              {socialLinks.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-9 h-9 rounded-full bg-slate-800 hover:bg-purple-600 border border-slate-700 hover:border-purple-600 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  <Icon size={16} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Column 2: Company ──────────────────────────────── */}
+          <div>
+            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">Company</h3>
+            <ul className="space-y-2.5">
+              {companyLinks.map(({ label, href }) => (
+                <li key={label}>
+                  <Link
+                    to={href}
+                    className="text-sm text-slate-400 hover:text-purple-400 transition-all duration-200 flex items-center gap-2 group"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-purple-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Column 3: Resources ────────────────────────────── */}
+          <div>
+            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">Resources</h3>
+            <ul className="space-y-2.5">
+              {resourceLinks.map(({ label, href }) => (
+                <li key={label}>
+                  <Link
+                    to={href}
+                    className="text-sm text-slate-400 hover:text-purple-400 transition-all duration-200 flex items-center gap-2 group"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-purple-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Column 4: About / Quick Info ───────────────────── */}
+          <div>
+            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">Why TechiGuru?</h3>
+            <ul className="space-y-3">
+              {[
+                { num: '15,000+', text: 'Active Students Enrolled' },
+                { num: '200+',   text: 'Expert Courses Available' },
+                { num: '98%',    text: 'Student Satisfaction Rate' },
+                { num: '500+',   text: 'Certificates Issued' },
+                { num: '100%',   text: 'Skill-Based Curriculum' },
+              ].map(({ num, text }) => (
+                <li key={text} className="flex items-start gap-3">
+                  <span className="text-purple-400 font-black text-sm shrink-0 min-w-[52px]">{num}</span>
+                  <span className="text-slate-400 text-sm leading-snug">{text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 p-4 rounded-xl bg-purple-600/10 border border-purple-600/20">
+              <p className="text-purple-300 text-xs font-semibold mb-1">📍 Reach Us At</p>
+              <a href="https://techiguru.in" target="_blank" rel="noopener noreferrer" className="text-sm text-purple-400 hover:text-white transition-colors font-medium">
+                https://techiguru.in
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── Divider ────────────────────────────────────────────── */}
+        <div className="border-t border-slate-800/80 mt-16 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+            <p className="text-slate-500 text-sm">
+              © {currentYear} <span className="text-slate-400 font-semibold">TechiGuru</span> | Techiguru Technology Pvt. Ltd. All rights reserved.
+            </p>
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
+              <Link to="/privacy-policy"   className="text-xs text-slate-500 hover:text-purple-400 transition-colors">Privacy Policy</Link>
+              <Link to="/terms-conditions" className="text-xs text-slate-500 hover:text-purple-400 transition-colors">Terms of Service</Link>
+              <Link to="/help-centre"      className="text-xs text-slate-500 hover:text-purple-400 transition-colors">Help Centre</Link>
+            </div>
           </div>
         </div>
+
       </div>
     </footer>
   );
