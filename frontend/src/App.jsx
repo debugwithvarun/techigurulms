@@ -25,6 +25,9 @@ import PrivacyPolicy from "./page/PrivacyPage";
 import TermsConditions from "./page/TermsConditions";
 import HelpCentre from "./page/HelpCentre";
 import AdminLoginPage from "./components/Login/AdminLogin";
+import SearchPage from "./page/SearchPage";
+import CareersPage from "./page/CareersPage";
+import BlogPage from "./page/BlogPage";
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
@@ -80,6 +83,9 @@ function App() {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />
               <Route path="/help-centre" element={<HelpCentre />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/careers" element={<CareersPage />} />
+              <Route path="/blog" element={<BlogPage />} />
             </Route>
 
             {/* COURSE - Public marketing page with Navbar */}

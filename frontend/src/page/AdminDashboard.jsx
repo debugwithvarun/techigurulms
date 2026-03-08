@@ -893,132 +893,110 @@ const AdminDashboard = () => {
                     )}
                 </div>
             </div>
-        </div>
-    );
-};
+        {/* </div> */}
 
-/* ── Course Preview Modal ─────────────────────────────────────────────────── */
-const CoursePreviewModal = ({ course, onClose, onApprove, onReject, actionLoading }) => {
-    if (!course) return null;
-    const { getImageUrl: _gi } = require('../config') || {};
-    const imgUrl = course.thumbnail?.url || course.thumbnail;
-    const fullImgUrl = imgUrl
-        ? (imgUrl.startsWith('http') ? imgUrl : `https://api.techiguru.in${imgUrl}`)
-        : null;
-    const totalLessons = course.sections?.reduce((a, s) => a + (s.lessons?.length || 0), 0) || 0;
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <div
-                className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-                    <h2 className="font-bold text-gray-900 text-lg truncate pr-4">{course.title}</h2>
-                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500">
-                        <X size={18} />
-                    </button>
-                </div>
-
-                {/* Thumbnail */}
-                {fullImgUrl && (
-                    <div className="w-full h-52 bg-gray-100 overflow-hidden">
-                        <img src={fullImgUrl} alt={course.title} className="w-full h-full object-cover" />
+        {/* ─── Course Preview Modal ─────────────────────────────────── */}
+        {previewCourse && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={() => setPreviewCourse(null)}>
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                <div className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+                        <h2 className="font-bold text-gray-900 text-lg truncate pr-4">{previewCourse.title}</h2>
+                        <button onClick={() => setPreviewCourse(null)} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500"><X size={18} /></button>
                     </div>
-                )}
-
-                <div className="p-6 space-y-5">
-                    {/* Meta row */}
-                    <div className="flex flex-wrap gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${course.approvalStatus === 'approved' ? 'bg-green-50 text-green-700' : course.approvalStatus === 'rejected' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>
-                            {course.approvalStatus || 'pending'}
-                        </span>
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">{course.category}</span>
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700">{course.level || 'All Levels'}</span>
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">
-                            {course.price === 0 ? 'Free' : `₹${Number(course.price).toLocaleString('en-IN')}`}
-                        </span>
-                    </div>
-
-                    {/* Instructor */}
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center font-bold text-purple-700 text-sm shrink-0">
-                            {(course.instructor?.name || 'I')[0].toUpperCase()}
-                        </div>
-                        <div>
-                            <p className="font-semibold text-gray-800 text-sm">{course.instructor?.name || 'Unknown Instructor'}</p>
-                            <p className="text-xs text-gray-500">{course.instructor?.email}</p>
-                        </div>
-                    </div>
-
-                    {/* Description */}
-                    {course.description && (
-                        <div>
-                            <h3 className="text-sm font-bold text-gray-700 mb-1.5">Description</h3>
-                            <p className="text-sm text-gray-600 leading-relaxed">{course.description}</p>
+                    {/* Thumbnail */}
+                    {(previewCourse.thumbnail?.url || previewCourse.thumbnail) && (
+                        <div className="w-full h-52 bg-gray-100 overflow-hidden">
+                            <img
+                                src={getImageUrl(previewCourse.thumbnail?.url || previewCourse.thumbnail)}
+                                alt={previewCourse.title}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
                     )}
-
-                    {/* Sections */}
-                    {course.sections?.length > 0 && (
-                        <div>
-                            <h3 className="text-sm font-bold text-gray-700 mb-2.5">
-                                Curriculum — {course.sections.length} sections · {totalLessons} lessons
-                            </h3>
-                            <div className="space-y-2">
-                                {course.sections.map((sec, i) => (
-                                    <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
-                                        <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50">
-                                            <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center shrink-0">{i + 1}</span>
-                                            <p className="font-semibold text-gray-800 text-sm">{sec.title}</p>
-                                            <span className="ml-auto text-xs text-gray-400">{sec.lessons?.length || 0} lessons</span>
-                                        </div>
-                                        {sec.lessons?.length > 0 && (
-                                            <ul className="divide-y divide-gray-50">
-                                                {sec.lessons.map((les, j) => (
-                                                    <li key={j} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600">
-                                                        <span className="text-gray-300 text-xs w-4">{j + 1}.</span>
-                                                        <BookOpen size={12} className="text-blue-400 shrink-0" />
-                                                        <span className="truncate">{les.title}</span>
-                                                        {les.isFree && <span className="ml-auto text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">FREE</span>}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                ))}
+                    <div className="p-6 space-y-5">
+                        {/* Badges */}
+                        <div className="flex flex-wrap gap-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${previewCourse.approvalStatus === 'approved' ? 'bg-green-50 text-green-700' : previewCourse.approvalStatus === 'rejected' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>{previewCourse.approvalStatus || 'pending'}</span>
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">{previewCourse.category}</span>
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700">{previewCourse.level || 'All Levels'}</span>
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">{previewCourse.price === 0 ? 'Free' : `₹${Number(previewCourse.price || 0).toLocaleString('en-IN')}`}</span>
+                        </div>
+                        {/* Instructor */}
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center font-bold text-purple-700 text-sm shrink-0">{(previewCourse.instructor?.name || 'I')[0].toUpperCase()}</div>
+                            <div>
+                                <p className="font-semibold text-gray-800 text-sm">{previewCourse.instructor?.name || 'Unknown Instructor'}</p>
+                                <p className="text-xs text-gray-500">{previewCourse.instructor?.email}</p>
                             </div>
                         </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-2 border-t border-gray-100">
-                        {course.approvalStatus !== 'approved' && (
-                            <button
-                                onClick={() => { onApprove(course._id); onClose(); }}
-                                disabled={actionLoading === course._id}
-                                className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-sm transition-colors disabled:opacity-50"
-                            >
-                                {actionLoading === course._id ? 'Publishing...' : '✓ Approve & Publish'}
-                            </button>
+                        {/* Description */}
+                        {previewCourse.description && <div><h3 className="text-sm font-bold text-gray-700 mb-1.5">Description</h3><p className="text-sm text-gray-600 leading-relaxed">{previewCourse.description}</p></div>}
+                        {/* Learning Points */}
+                        {previewCourse.learningPoints?.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-700 mb-2">What Students Will Learn</h3>
+                                <ul className="space-y-1">{previewCourse.learningPoints.map((p, i) => <li key={i} className="flex gap-2 text-sm text-gray-600"><span className="text-green-500 shrink-0">✓</span>{p}</li>)}</ul>
+                            </div>
                         )}
-                        {course.approvalStatus !== 'rejected' && (
-                            <button
-                                onClick={() => { onReject(course._id, 'Quality standard not met'); onClose(); }}
-                                disabled={actionLoading === course._id + 'r'}
-                                className="flex-1 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl text-sm transition-colors disabled:opacity-50"
-                            >
-                                ✕ Reject
-                            </button>
+                        {/* Sections — backend may store as 'topics' or 'sections' */}
+                        {(previewCourse.topics || previewCourse.sections || []).length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-700 mb-2.5">
+                                    Curriculum — {(previewCourse.topics || previewCourse.sections || []).length} sections
+                                    · {(previewCourse.topics || previewCourse.sections || []).reduce((a, s) => a + (s.lessons?.length || s.videos?.length || 0), 0)} lessons
+                                </h3>
+                                <div className="space-y-2">
+                                    {(previewCourse.topics || previewCourse.sections || []).map((sec, i) => {
+                                        const lessons = sec.lessons || sec.videos || [];
+                                        return (
+                                            <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
+                                                <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50">
+                                                    <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center shrink-0">{i + 1}</span>
+                                                    <p className="font-semibold text-gray-800 text-sm">{sec.title}</p>
+                                                    <span className="ml-auto text-xs text-gray-400">{lessons.length} lessons</span>
+                                                </div>
+                                                {lessons.length > 0 && (
+                                                    <ul className="divide-y divide-gray-50">
+                                                        {lessons.map((les, j) => (
+                                                            <li key={j} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600">
+                                                                <span className="text-gray-300 text-xs w-4">{j + 1}.</span>
+                                                                <BookOpen size={12} className="text-blue-400 shrink-0" />
+                                                                <span className="truncate">{les.title}</span>
+                                                                {les.isFree && <span className="ml-auto text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">FREE</span>}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         )}
+                        {/* Actions */}
+                        <div className="flex gap-3 pt-2 border-t border-gray-100">
+                            {previewCourse.approvalStatus !== 'approved' && (
+                                <button onClick={() => { handleApproveCourse(previewCourse._id); setPreviewCourse(null); }} disabled={actionLoading === previewCourse._id}
+                                    className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl text-sm transition-colors disabled:opacity-50">
+                                    {actionLoading === previewCourse._id ? 'Publishing...' : '✓ Approve & Publish'}
+                                </button>
+                            )}
+                            {previewCourse.approvalStatus !== 'rejected' && (
+                                <button onClick={() => { handleRejectCourse(previewCourse._id, 'Quality standard not met'); setPreviewCourse(null); }} disabled={actionLoading === previewCourse._id + 'r'}
+                                    className="flex-1 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl text-sm transition-colors disabled:opacity-50">
+                                    ✕ Reject
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
+        )}
         </div>
     );
+
 };
 
 export default AdminDashboard;
-

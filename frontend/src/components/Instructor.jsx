@@ -6,14 +6,7 @@ import uday from '../assets/uday.png';
 import anajali from '../assets/anajali.png';
 
 const instructors = [
-  {
-    name: 'Varun Chauhan',
-    role: 'MERN Stack & DSA',
-    img: varun,
-    tag: 'Full Stack',
-    color: '#7c3aed',
-    bg: '#f5f3ff',
-  },
+
   {
     name: 'Pawan Sharma',
     role: 'Android Development',
@@ -23,14 +16,6 @@ const instructors = [
     bg: '#f0f9ff',
   },
   {
-    name: 'Uday Bhatnagar',
-    role: 'MERN Stack',
-    img: uday,
-    tag: 'Full Stack',
-    color: '#7c3aed',
-    bg: '#f5f3ff',
-  },
-  {
     name: 'Anjali Sharma',
     role: 'HR & Operations',
     img: anajali,
@@ -38,6 +23,23 @@ const instructors = [
     color: '#ec4899',
     bg: '#fdf2f8',
   },
+  {
+    name: 'Varun Chauhan',
+    role: 'MERN Stack & DSA',
+    img: varun,
+    tag: 'Full Stack',
+    color: '#7c3aed',
+    bg: '#f5f3ff',
+  },
+  {
+    name: 'Uday Bhatnagar',
+    role: 'MERN Stack',
+    img: uday,
+    tag: 'Full Stack',
+    color: '#7c3aed',
+    bg: '#f5f3ff',
+  },
+
 ];
 
 const Instructors = () => {

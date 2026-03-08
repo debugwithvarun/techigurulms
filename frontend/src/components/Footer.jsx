@@ -10,19 +10,19 @@ const Footer = () => {
 
   const companyLinks = [
     { label: 'About Us', href: '/about' },
-    { label: 'Careers', href: '#' },
+    { label: 'Careers', href: '/careers' },
     { label: 'Contact Us', href: '/contact' },
-    { label: 'Investors', href: '#' },
+    { label: 'Investors', href: '/contact' },
     { label: 'Teams', href: '/about' },
-    { label: 'Our Partners', href: '#' },
+    { label: 'Our Partners', href: '/contact' },
     { label: 'Our Story', href: '/about' },
-    { label: 'Testimonials', href: '#' },
+    { label: 'Testimonials', href: '/about' },
   ];
 
   const resourceLinks = [
-    { label: 'Technical Q&A', href: '#' },
-    { label: 'Blogs', href: '#' },
-    { label: 'Sitemap', href: '#' },
+    { label: 'Technical Q&A', href: '/help-centre' },
+    { label: 'Blogs', href: '/blog' },
+    { label: 'Sitemap', href: '/' },
     { label: 'Help Center', href: '/help-centre' },
     { label: 'Terms Of Service', href: '/terms-conditions' },
     { label: 'Career Path', href: '/active-course' },
@@ -159,12 +159,12 @@ const Footer = () => {
               ))}
             </ul>
 
-            <div className="mt-8 p-4 rounded-xl bg-purple-600/10 border border-purple-600/20">
+            {/* <div className="mt-8 p-4 rounded-xl bg-purple-600/10 border border-purple-600/20">
               <p className="text-purple-300 text-xs font-semibold mb-1">📍 Reach Us At</p>
               <a href="https://techiguru.in" target="_blank" rel="noopener noreferrer" className="text-sm text-purple-400 hover:text-white transition-colors font-medium">
                 https://techiguru.in
               </a>
-            </div>
+            </div> */}
           </div>
 
         </div>

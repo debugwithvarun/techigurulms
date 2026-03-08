@@ -158,14 +158,24 @@ const Navbar = () => {
             <div className="flex items-center">
               <AnimatePresence>
                 {isSearchOpen && (
-                  <motion.input
+                  <motion.form
                     initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 200, opacity: 1 }}
+                    animate={{ width: 220, opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
-                    className="hidden md:block bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-purple-200 outline-none mr-2 text-slate-700"
-                    placeholder="Search courses..."
-                    autoFocus
-                  />
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const q = e.target.elements.q.value.trim();
+                      if (q) { navigate(`/search?q=${encodeURIComponent(q)}`); setIsSearchOpen(false); }
+                    }}
+                    className="hidden md:block mr-2"
+                  >
+                    <input
+                      name="q"
+                      className="w-full bg-gray-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-purple-200 outline-none text-slate-700"
+                      placeholder="Search courses & certificates..."
+                      autoFocus
+                    />
+                  </motion.form>
                 )}
               </AnimatePresence>
               <button 
@@ -175,6 +185,7 @@ const Navbar = () => {
                 <Search size={20} />
               </button>
             </div>
+
 
             {/* Auth State */}
             {user ? (
