@@ -224,7 +224,7 @@ const HelpCentre = () => {
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className={`mb-10 scroll-mt-24 ${activeSection === id ? 'ring-1 ring-purple-500/20 rounded-2xl' : ''}`}
+                className={`mb-10 p-2 scroll-mt-24 ${activeSection === id ? 'ring-1 ring-purple-500/80 rounded-2xl' : ''}`}
                 id={id}
               >
                 <div className="flex items-center gap-3 mb-4 px-2">
