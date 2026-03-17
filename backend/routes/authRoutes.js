@@ -18,6 +18,8 @@ const {
   sendVerifyAccountOTP,
   verifyAccountWithOTP,
   verifyEmailByToken,
+  generateSSOToken,
+  validateSSOToken,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -69,5 +71,9 @@ router.get('/me', protect, getMe);
 router.put('/profile', protect, updateUserProfile);
 router.get('/my-enrollments', protect, getMyEnrollments);
 router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
+
+// ── SSO Routes (AI Interview cross-app auth) ────────────────────────────────
+router.get('/sso-token', protect, generateSSOToken);        // Frontend fetches short-lived token
+router.post('/validate-sso', validateSSOToken);             // Flask app validates token server-to-server
 
 module.exports = router;

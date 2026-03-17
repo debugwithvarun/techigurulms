@@ -9,6 +9,8 @@ const {
     uploadStudentCertificate,
     getMyStudentCertificates,
     unlockCourseWithPoints,
+    getLeaderboard,
+    submitInterviewScore,
 } = require('../controllers/studentController');
 
 // Multer storage for cert uploads
@@ -46,5 +48,11 @@ router.post('/cert-redirect/:certId', trackCertRedirect);
 router.post('/upload-cert/:certId', upload.single('certificate'), uploadStudentCertificate);
 router.get('/my-certs', getMyStudentCertificates);
 router.post('/unlock-course/:courseId', unlockCourseWithPoints);
+
+// ── Public leaderboard (no auth required) ───────────────────────────────────
+router.get('/leaderboard', getLeaderboard);
+
+// ── Interview score — called by Flask app (uses userToken from body) ────────
+router.post('/interview-score', submitInterviewScore);
 
 module.exports = router;

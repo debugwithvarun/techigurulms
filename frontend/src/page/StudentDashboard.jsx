@@ -8,6 +8,7 @@ import {
   FileText, ExternalLink, Shield, Zap, X,
   AlertCircle, RefreshCw, BarChart2, Layers,
   Sparkles, GraduationCap, Bell, Flame, Menu,
+  Trophy, Mic, Crown, Medal,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
@@ -389,6 +390,9 @@ const StudentDashboard = () => {
   const [uploadedCerts, setUploadedCerts] = useState([]);
   const [toast, setToast]             = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [lbLoading, setLbLoading]     = useState(false);
+  const [ssoLoading, setSsoLoading]   = useState(false);
   const fileInputRef = useRef();
 
   const showToast = useCallback((msg, type='success') => {
@@ -400,6 +404,32 @@ const StudentDashboard = () => {
     if (!user) { navigate('/login'); return; }
     fetchDashboard();
   }, [user]);
+
+  // Fetch leaderboard when tab is selected
+  useEffect(() => {
+    if (activeTab === 'leaderboard') fetchLeaderboard();
+  }, [activeTab]);
+
+  const fetchLeaderboard = async () => {
+    setLbLoading(true);
+    try {
+      const { data: lb } = await api.get('/student/leaderboard');
+      setLeaderboard(lb || []);
+    } catch { /* silent */ }
+    finally { setLbLoading(false); }
+  };
+
+  const handleLaunchInterview = async () => {
+    setSsoLoading(true);
+    try {
+      const { data: ssoData } = await api.get('/auth/sso-token');
+      window.open(`https://imshopper-aimockinterview.hf.space?sso=${ssoData.ssoToken}`, '_blank', 'noopener,noreferrer');
+    } catch {
+      window.open('https://imshopper-aimockinterview.hf.space', '_blank', 'noopener,noreferrer');
+    } finally {
+      setSsoLoading(false);
+    }
+  };
 
   const fetchDashboard = async () => {
     setLoading(true);
@@ -460,6 +490,7 @@ const StudentDashboard = () => {
     { id:'courses',      label:'My Courses',   icon:BookOpen,  count:enrolledCourses.length },
     { id:'certificates', label:'Certificates', icon:Award,     count:earnedCerts.length },
     { id:'cert-upload',  label:'Cert Upload',  icon:Upload,    count:redirectedCerts.length },
+    { id:'leaderboard',  label:'Leaderboard',  icon:Trophy,    count:0 },
   ];
 
   const fadeUp = { initial:{ opacity:0, y:16 }, animate:{ opacity:1, y:0 }, transition:sp(260,24) };
@@ -655,6 +686,30 @@ const StudentDashboard = () => {
                     {enrolledCourses.length===0
                       ? <EmptyState icon={BookOpen} title="No courses yet" sub="Start your journey today." cta="Browse" onClick={() => navigate('/active-course')}/>
                       : enrolledCourses.slice(0,4).map((c,i) => <CourseCard key={c._id} course={c} index={i} onContinue={() => navigate(`/course/${c._id}/learn`)}/>)}
+
+                    {/* AI Interview Quick Launch Card */}
+                    <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.3 }}
+                      className="relative rounded-3xl p-5 overflow-hidden mt-2"
+                      style={{ background:'linear-gradient(135deg,rgba(79,124,255,0.12),rgba(124,92,255,0.1))', border:'1px solid rgba(79,124,255,0.25)' }}>
+                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none"
+                        style={{ background:'radial-gradient(circle,rgba(79,124,255,0.18) 0%,transparent 70%)', transform:'translate(20%,-20%)' }}/>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                          style={{ background:'linear-gradient(135deg,#4f7cff,#7c5cff)', boxShadow:'0 8px 24px rgba(79,124,255,0.35)' }}>
+                          <Mic size={20} className="text-white"/>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm mb-0.5" style={{ color:T.text.primary }}>AI Mock Interview</p>
+                          <p className="text-xs" style={{ color:T.text.secondary }}>Practice &amp; earn points. Rank on the leaderboard.</p>
+                        </div>
+                        <button onClick={handleLaunchInterview} disabled={ssoLoading}
+                          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                          style={{ background:'linear-gradient(135deg,#4f7cff,#7c5cff)', color:'#fff', boxShadow:'0 4px 16px rgba(79,124,255,0.3)' }}>
+                          {ssoLoading ? <RefreshCw size={11} className="animate-spin"/> : <Play size={11} fill="#fff"/>}
+                          {ssoLoading ? 'Loading...' : 'Start'}
+                        </button>
+                      </div>
+                    </motion.div>
                   </div>
 
                   {/* Right col — 2 col */}
@@ -805,6 +860,139 @@ const StudentDashboard = () => {
                       })}
                     </div>
                   )}
+              </motion.div>
+            )}
+
+            {/* ── LEADERBOARD ───────────────────────────────────────── */}
+            {activeTab==='leaderboard' && (
+              <motion.div key="lb" {...fadeUp} className="space-y-5">
+
+                {/* Header Banner */}
+                <div className="relative rounded-3xl p-7 overflow-hidden"
+                  style={{ background:'linear-gradient(135deg,rgba(201,168,76,0.12),rgba(11,15,42,0.8))', border:`1px solid ${T.goldBorder}` }}>
+                  <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
+                    style={{ background:'radial-gradient(circle,rgba(201,168,76,0.16) 0%,transparent 65%)', transform:'translate(20%,-20%)' }}/>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color:T.gold }}>Global Rankings</p>
+                      <h2 className="text-2xl font-black mb-1" style={{ color:T.text.primary, fontFamily:"'Playfair Display',serif" }}>AI Interview Leaderboard</h2>
+                      <p className="text-sm" style={{ color:T.text.secondary }}>Earn <span style={{ color:T.goldLight, fontWeight:700 }}>points</span> by acing your mock interviews. Climb the ranks!</p>
+                    </div>
+                    <button onClick={handleLaunchInterview} disabled={ssoLoading}
+                      className="hidden sm:flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold transition-all disabled:opacity-50"
+                      style={{ background:`linear-gradient(135deg,${T.gold},#a8731a)`, color:'#06091a', boxShadow:`0 8px 28px rgba(201,168,76,0.35)` }}>
+                      {ssoLoading ? <RefreshCw size={14} className="animate-spin"/> : <Mic size={14}/>}
+                      {ssoLoading ? 'Loading...' : 'Start Interview'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Podium — Top 3 */}
+                {!lbLoading && leaderboard.length >= 3 && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {[leaderboard[1], leaderboard[0], leaderboard[2]].map((s, pos) => {
+                      const realRank = pos===1 ? 1 : pos===0 ? 2 : 3;
+                      const podiumColors = {
+                        1: { bg:'linear-gradient(135deg,rgba(201,168,76,0.18),rgba(11,15,42,0.8))', border:T.goldBorder, color:T.gold, icon:'🥇', size:'text-3xl' },
+                        2: { bg:'linear-gradient(135deg,rgba(148,163,184,0.12),rgba(11,15,42,0.8))', border:'rgba(148,163,184,0.25)', color:'#94a3b8', icon:'🥈', size:'text-2xl' },
+                        3: { bg:'linear-gradient(135deg,rgba(180,113,60,0.12),rgba(11,15,42,0.8))', border:'rgba(180,113,60,0.25)', color:'#cd7f32', icon:'🥉', size:'text-2xl' },
+                      }[realRank];
+                      if (!s) return <div key={pos}/>;
+                      return (
+                        <motion.div key={s._id || pos}
+                          initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay: pos*0.08 }}
+                          className={`relative rounded-3xl p-5 text-center overflow-hidden ${realRank===1 ? 'row-start-1' : ''}`}
+                          style={{ background:podiumColors.bg, border:`1px solid ${podiumColors.border}`, marginTop: realRank===1 ? 0 : '1rem' }}>
+                          <div className="text-3xl mb-2">{podiumColors.icon}</div>
+                          <div className="w-12 h-12 rounded-2xl mx-auto mb-2 flex items-center justify-center text-lg font-black"
+                            style={{ background:`${podiumColors.color}22`, border:`1px solid ${podiumColors.color}44`, color:podiumColors.color }}>
+                            {s.name?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          <p className="font-bold text-xs truncate" style={{ color:T.text.primary }}>{s.name}</p>
+                          <p className="text-xs font-black mt-1" style={{ color:podiumColors.color, fontFamily:"'DM Mono',monospace" }}>{(s.profilePoints||0).toLocaleString()} pts</p>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Full Rankings Table */}
+                <div className="rounded-3xl overflow-hidden" style={{ border:`1px solid ${T.border}` }}>
+                  {/* Header */}
+                  <div className="grid grid-cols-12 px-5 py-3 text-[10px] font-bold uppercase tracking-widest"
+                    style={{ background:'rgba(255,255,255,0.03)', borderBottom:`1px solid ${T.border}`, color:T.text.muted }}>
+                    <span className="col-span-1">#</span>
+                    <span className="col-span-5">Student</span>
+                    <span className="col-span-3 text-right">Interviews</span>
+                    <span className="col-span-3 text-right">Points</span>
+                  </div>
+
+                  {lbLoading ? (
+                    <div className="py-12 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="relative w-8 h-8">
+                          <div className="absolute inset-0 rounded-full border-2" style={{ borderColor:`${T.gold}22` }}/>
+                          <motion.div className="absolute inset-0 rounded-full border-2 border-transparent"
+                            style={{ borderTopColor:T.gold }}
+                            animate={{ rotate:360 }} transition={{ duration:1, repeat:Infinity, ease:'linear' }}/>
+                        </div>
+                        <span className="text-xs" style={{ color:T.text.muted }}>Loading rankings...</span>
+                      </div>
+                    </div>
+                  ) : leaderboard.length === 0 ? (
+                    <EmptyState icon={Trophy} title="No rankings yet" sub="Complete an AI interview to appear on the leaderboard."
+                      cta="Start Interview" onClick={handleLaunchInterview}/>
+                  ) : leaderboard.map((s, i) => {
+                    const isMe = s._id?.toString() === (user?._id || user?.id)?.toString();
+                    const rankColors = { 0:`#e8c97a`, 1:`#94a3b8`, 2:`#cd7f32` };
+                    const rankColor = rankColors[i] || T.text.muted;
+                    return (
+                      <motion.div key={s._id || i}
+                        initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }} transition={{ delay:i*0.04 }}
+                        className="grid grid-cols-12 items-center px-5 py-4 transition-colors"
+                        style={{
+                          borderBottom: i < leaderboard.length-1 ? `1px solid ${T.border}` : 'none',
+                          background: isMe ? `rgba(201,168,76,0.06)` : 'transparent',
+                        }}>
+                        {/* Rank */}
+                        <div className="col-span-1">
+                          {i < 3
+                            ? <span className="text-base">{['🥇','🥈','🥉'][i]}</span>
+                            : <span className="text-sm font-black" style={{ color:T.text.muted, fontFamily:"'DM Mono',monospace" }}>{i+1}</span>}
+                        </div>
+                        {/* Name & badges */}
+                        <div className="col-span-5 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
+                            style={{ background:isMe?`${T.gold}25`:`rgba(255,255,255,0.05)`, border:`1px solid ${isMe?T.goldBorder:T.border}`, color:isMe?T.gold:T.text.secondary }}>
+                            {s.name?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate" style={{ color:isMe?T.goldLight:T.text.primary }}>
+                              {s.name}{isMe && <span className="ml-1.5 text-[9px] font-black px-1.5 py-0.5 rounded" style={{ background:`${T.gold}25`, color:T.gold }}>YOU</span>}
+                            </p>
+                            {s.badges?.slice(0,2).map(b => (
+                              <span key={b} className="text-[9px] font-semibold mr-1" style={{ color:T.text.muted }}>🏅{b}</span>
+                            ))}
+                          </div>
+                        </div>
+                        {/* Interview count */}
+                        <div className="col-span-3 text-right">
+                          <span className="text-xs font-semibold" style={{ color:T.text.secondary }}>
+                            {s.interviewCount || 0} <span style={{ color:T.text.muted }}>interviews</span>
+                          </span>
+                        </div>
+                        {/* Points */}
+                        <div className="col-span-3 text-right">
+                          <span className="text-sm font-black" style={{ color:rankColor, fontFamily:"'DM Mono',monospace" }}>
+                            {(s.profilePoints||0).toLocaleString()}
+                          </span>
+                          <span className="text-[10px] ml-0.5" style={{ color:T.text.muted }}>pts</span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
               </motion.div>
             )}
 

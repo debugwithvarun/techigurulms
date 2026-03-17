@@ -32,8 +32,7 @@ const allowedOrigins = [
   "http://www.techiguru.in",
   "https://www.techiguru.in",
   "http://localhost:5173",
-  // "https://www.yourdomain.com",
-  // "https://app.yourdomain.com",
+  "https://imshopper-aimockinterview.hf.space",
 ];
 
 app.use(

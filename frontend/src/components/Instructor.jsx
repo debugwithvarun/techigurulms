@@ -9,9 +9,9 @@ const instructors = [
 
   {
     name: 'Pawan Sharma',
-    role: 'Android Development',
+    role: 'Data Scientist',
     img: pawan,
-    tag: 'Mobile',
+    tag: 'Gen AI',
     color: '#0ea5e9',
     bg: '#f0f9ff',
   },

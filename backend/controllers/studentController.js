@@ -244,10 +244,108 @@ const unlockCourseWithPoints = async (req, res) => {
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LEADERBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /api/student/leaderboard
+const getLeaderboard = async (req, res) => {
+    try {
+        const students = await User.find({ role: 'student' })
+            .select('name avatar profilePoints interviewHistory badges')
+            .sort({ profilePoints: -1 })
+            .limit(20)
+            .lean();
+
+        const leaderboard = students.map((s, index) => ({
+            rank: index + 1,
+            _id: s._id,
+            name: s.name,
+            avatar: s.avatar || '',
+            profilePoints: s.profilePoints || 0,
+            interviewCount: (s.interviewHistory || []).length,
+            bestScore: s.interviewHistory?.length
+                ? Math.max(...s.interviewHistory.map(h => h.score || 0))
+                : 0,
+            badges: s.badges || [],
+        }));
+
+        res.json(leaderboard);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUBMIT INTERVIEW SCORE
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/student/interview-score
+// Called by the Flask AI interview app after interview completion
+// Body: { score: number (1-10), jobRole: string, userToken: string }
+const submitInterviewScore = async (req, res) => {
+    try {
+        const { score, jobRole, userToken } = req.body;
+
+        if (!userToken) return res.status(400).json({ message: 'userToken is required' });
+
+        // Validate the JWT token from the SSO session
+        const jwt = require('jsonwebtoken');
+        let decoded;
+        try {
+            decoded = jwt.verify(userToken, process.env.JWT_SECRET);
+        } catch {
+            return res.status(401).json({ message: 'Invalid or expired token' });
+        }
+
+        const user = await User.findById(decoded.id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const numScore = Math.min(10, Math.max(0, parseFloat(score) || 0));
+        const pointsAwarded = Math.round(numScore * 10); // 0-100 points
+
+        user.interviewHistory = user.interviewHistory || [];
+        user.interviewHistory.push({
+            score: numScore,
+            jobRole: jobRole || 'General',
+            date: new Date(),
+            pointsAwarded,
+        });
+
+        user.profilePoints = (user.profilePoints || 0) + pointsAwarded;
+
+        // Award badges based on milestones
+        const totalInterviews = user.interviewHistory.length;
+        if (totalInterviews === 1 && !user.badges.includes('First Interview')) {
+            user.badges.push('First Interview');
+        }
+        if (totalInterviews >= 5 && !user.badges.includes('Interview Pro')) {
+            user.badges.push('Interview Pro');
+        }
+        if (numScore >= 8 && !user.badges.includes('High Achiever')) {
+            user.badges.push('High Achiever');
+        }
+
+        await user.save({ validateModifiedOnly: true });
+
+        res.json({
+            message: 'Score saved successfully!',
+            score: numScore,
+            pointsAwarded,
+            totalPoints: user.profilePoints,
+            badges: user.badges,
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     getStudentDashboard,
     trackCertRedirect,
     uploadStudentCertificate,
     getMyStudentCertificates,
     unlockCourseWithPoints,
+    getLeaderboard,
+    submitInterviewScore,
 };

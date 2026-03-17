@@ -4,10 +4,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Search, ShoppingCart, ChevronDown, ChevronRight, 
   LogIn, Menu, X, Globe, BookOpen, Smartphone, PlayCircle, PauseCircle,
-  LayoutDashboard, LogOut, User, Award, GraduationCap, Briefcase
+  LayoutDashboard, LogOut, User, Award, GraduationCap, Briefcase, Loader
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 
 const Navbar = () => {
   const { user, logout } = useAuth(); 
@@ -19,6 +20,7 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false); 
+  const [ssoLoading, setSsoLoading] = useState(false);
   
   // New states for Auth dropdowns
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
@@ -37,6 +39,30 @@ const Navbar = () => {
       setProfileOpen(false);
       setIsMobileMenuOpen(false);
       navigate('/login');
+  };
+
+  // SSO handler — fetches a short-lived token and redirects to AI Interview app
+  const handleServiceClick = async (e, item) => {
+    e.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (!item.isExternal) {
+      navigate(item.path);
+      return;
+    }
+    setSsoLoading(true);
+    try {
+      const { data } = await api.get('/auth/sso-token');
+      const url = `${item.path}?sso=${data.ssoToken}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      // Fallback to direct link if SSO fails
+      window.open(item.path, '_blank', 'noopener,noreferrer');
+    } finally {
+      setSsoLoading(false);
+    }
   };
 
   if (hideNavbarPaths.includes(location.pathname)) return null;
@@ -59,6 +85,15 @@ const Navbar = () => {
         { title: 'Active Certificates', path: '/active-certificates', icon: <Award size={16}/> }, 
         { title: 'Archived Certificates', path: '/inactive-certificates', icon: <PauseCircle size={16}/> }
       ] 
+    },
+    // 🔥 NEW: Our Service Dropdown with external links
+    {
+      name: 'Our Service',
+      hasDropdown: true,
+      dropdownItems: [
+        { title: 'AI Mock Interview', path: 'https://imshopper-aimockinterview.hf.space', isExternal: true, icon: <PlayCircle size={16}/> },
+        // { title: 'Google', path: 'https://www.google.com', isExternal: true, icon: <Globe size={16}/> }
+      ]
     },
     { name: 'About', path: '/about', hasDropdown: false },
     { name: 'Contact', path: '/contact', hasDropdown: false },
@@ -120,7 +155,7 @@ const Navbar = () => {
                   </button>
                 )}
 
-                {/* Dropdown */}
+                {/* Desktop Dropdown */}
                 <AnimatePresence>
                   {activeDropdown === link.name && link.dropdownItems && (
                     <motion.div
@@ -131,17 +166,33 @@ const Navbar = () => {
                       className="absolute top-full -left-4 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
                     >
                       <div className="p-2">
-                        {link.dropdownItems.map((item, idx) => (
-                          <Link
-                            key={idx}
-                            to={item.path}
-                            className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors group"
-                          >
-                            <span className="text-purple-400 group-hover:text-purple-600">
-                              {item.icon}
-                            </span>
-                            {item.title}
-                          </Link>
+                      {link.dropdownItems.map((item, idx) => (
+                          // Auth-guarded or external link
+                          item.isExternal ? (
+                            <button
+                              key={idx}
+                              onClick={(e) => handleServiceClick(e, item)}
+                              disabled={ssoLoading}
+                              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors group"
+                            >
+                              <span className="text-purple-400 group-hover:text-purple-600">
+                                {ssoLoading ? <Loader size={16} className="animate-spin"/> : item.icon}
+                              </span>
+                              {item.title}
+                              {!user && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-600">Login required</span>}
+                            </button>
+                          ) : (
+                            <Link
+                              key={idx}
+                              to={item.path}
+                              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors group"
+                            >
+                              <span className="text-purple-400 group-hover:text-purple-600">
+                                {item.icon}
+                              </span>
+                              {item.title}
+                            </Link>
+                          )
                         ))}
                       </div>
                     </motion.div>
@@ -217,7 +268,6 @@ const Navbar = () => {
                                 <p className="text-xs text-slate-500 truncate">{user.email}</p>
                             </div>
                             
-                            {/* 🔥 Securing the Dashboard link in the Profile menu too */}
                             {user?.role === 'instructor' && (
                               <>
                                 <Link to="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
@@ -428,15 +478,29 @@ const MobileDropdown = ({ link, closeMenu }) => {
           >
             <div className="pl-4 pb-2 space-y-3">
               {link.dropdownItems.map((item, idx) => (
-                <Link 
-                  key={idx} 
-                  to={item.path} 
-                  onClick={closeMenu}
-                  className="flex items-center gap-3 py-2 text-sm text-slate-500 hover:text-purple-600"
-                >
-                  <span className="text-purple-400">{item.icon}</span>
-                  {item.title}
-                </Link>
+                // 🔥 Mobile dropdown external link with SSO
+                item.isExternal ? (
+                  <button
+                    key={idx}
+                    onClick={(e) => { handleServiceClick(e, item); closeMenu(); }}
+                    disabled={ssoLoading}
+                    className="w-full flex items-center gap-3 py-2 text-sm text-slate-500 hover:text-purple-600"
+                  >
+                    <span className="text-purple-400">{ssoLoading ? <Loader size={14} className="animate-spin"/> : item.icon}</span>
+                    {item.title}
+                    {!user && <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-600">Login</span>}
+                  </button>
+                ) : (
+                  <Link 
+                    key={idx} 
+                    to={item.path} 
+                    onClick={closeMenu}
+                    className="flex items-center gap-3 py-2 text-sm text-slate-500 hover:text-purple-600"
+                  >
+                    <span className="text-purple-400">{item.icon}</span>
+                    {item.title}
+                  </Link>
+                )
               ))}
             </div>
           </motion.div>

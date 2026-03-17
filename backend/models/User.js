@@ -76,6 +76,18 @@ const userSchema = new mongoose.Schema({
   // Courses unlocked by spending points
   unlockedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
 
+  // ── AI Interview History ───────────────────────────────────────────────────
+  interviewHistory: [{
+    score:         { type: Number, min: 0, max: 10 },
+    jobRole:       { type: String },
+    date:          { type: Date, default: Date.now },
+    pointsAwarded: { type: Number, default: 0 },
+  }],
+
+  // ── SSO Token (AI Interview cross-app login) ──────────────────────────────
+  ssoToken:       { type: String, select: false },
+  ssoTokenExpire: { type: Date, select: false },
+
   // ── Misc ──────────────────────────────────────────────────────────────────
   resetPasswordToken: String,
   resetPasswordExpire: Date,

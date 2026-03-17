@@ -420,10 +420,72 @@ const verifyEmailByToken = async (req, res) => {
   }
 };
 
+// ── Generate SSO Token (for AI Interview cross-app login) ─────────────────────
+// GET /api/auth/sso-token  (protected)
+const generateSSOToken = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('+ssoToken +ssoTokenExpire');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Generate a random 32-byte token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    user.ssoToken = hashedToken;
+    user.ssoTokenExpire = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    await user.save({ validateModifiedOnly: true });
+
+    res.json({ ssoToken: rawToken });
+  } catch (error) {
+    console.error('generateSSOToken error:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// ── Validate SSO Token (called by Flask AI Interview app) ─────────────────────
+// POST /api/auth/validate-sso  (public — called server-to-server by Flask)
+const validateSSOToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ message: 'Token is required' });
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      ssoToken: hashedToken,
+      ssoTokenExpire: { $gt: Date.now() },
+    }).select('+ssoToken +ssoTokenExpire');
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid or expired SSO token' });
+    }
+
+    // Invalidate token after first use (one-time use)
+    user.ssoToken = undefined;
+    user.ssoTokenExpire = undefined;
+    await user.save({ validateModifiedOnly: true });
+
+    res.json({
+      valid: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id),   // Main JWT for score submission
+      }
+    });
+  } catch (error) {
+    console.error('validateSSOToken error:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 module.exports = {
   registerUser, loginUser, getMe, updateUserProfile,
   getMyEnrollments, getPublicProfile, uploadAvatar,
   sendSignupOTP, verifyAndRegister,
   forgotPassword, resetPasswordWithOTP,
   sendVerifyAccountOTP, verifyAccountWithOTP, verifyEmailByToken,
+  generateSSOToken, validateSSOToken,
 };

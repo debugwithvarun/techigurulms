@@ -11,23 +11,6 @@ const inputClass = `w-full px-4 py-3.5 rounded-xl bg-white border border-gray-20
   focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100
   transition-all duration-200`;
 
-const ContactInfo = ({ icon: Icon, title, value, href }) => (
-    <motion.a
-        href={href || '#'}
-        target={href?.startsWith('http') ? '_blank' : undefined}
-        rel="noopener noreferrer"
-        whileHover={{ x: 4 }}
-        className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-gray-100 hover:border-purple-200 hover:shadow-sm transition-all group"
-    >
-        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors">
-            <Icon size={18} className="text-purple-600" />
-        </div>
-        <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">{title}</p>
-            <p className="text-sm font-semibold text-slate-700 leading-snug">{value}</p>
-        </div>
-    </motion.a>
-);
 
 const Contact = () => {
     const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
@@ -52,7 +35,7 @@ const Contact = () => {
     };
 
     return (
-        <section className="min-h-screen bg-[#f8f7ff] py-24 font-sans">
+        <section className="min-h-screen bg-[#f8f7ff] py-24 pt-0 font-sans">
 
             {/* ── Hero Banner ── */}
             <div className="bg-gradient-to-br from-[#1e1148] via-[#2d1b6e] to-[#4c1d95] text-white py-20 px-6 mb-[-60px]">
@@ -109,7 +92,7 @@ const Contact = () => {
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">Email</p>
-                                            <p className="text-white text-sm font-semibold">info@generativeaix.com</p>
+                                            <p className="text-white text-sm font-semibold">techiguru.in@gmail.com</p>
                                         </div>
                                     </a>
                                     <div className="flex items-start gap-3.5">
