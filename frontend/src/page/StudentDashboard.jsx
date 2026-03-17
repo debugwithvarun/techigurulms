@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Award, BookOpen, Star, Upload, CheckCircle, Clock,
@@ -383,9 +383,13 @@ const EmptyState = ({ icon: Icon, title, sub, cta, onClick }) => (
 const StudentDashboard = () => {
   const { user, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [data, setData]               = useState(null);
   const [loading, setLoading]         = useState(true);
-  const [activeTab, setActiveTab]     = useState('overview');
+  
+  // Read initial tab from URL query params
+  const queryTab = new URLSearchParams(location.search).get('tab');
+  const [activeTab, setActiveTab]     = useState(queryTab || 'overview');
   const [uploadTarget, setUploadTarget] = useState(null);
   const [uploadedCerts, setUploadedCerts] = useState([]);
   const [toast, setToast]             = useState(null);

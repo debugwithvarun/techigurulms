@@ -179,7 +179,7 @@ const Navbar = () => {
                                 {ssoLoading ? <Loader size={16} className="animate-spin"/> : item.icon}
                               </span>
                               {item.title}
-                              {!user && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-600">Login required</span>}
+                              {/* {!user && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-600">Login required</span>} */}
                             </button>
                           ) : (
                             <Link
