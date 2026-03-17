@@ -427,15 +427,32 @@ const generateSSOToken = async (req, res) => {
     const user = await User.findById(req.user._id).select('+ssoToken +ssoTokenExpire');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Generate a random 32-byte token
+    // 1. Generate a cryptographically random 32-byte raw token
     const rawToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
+    // 2. Store SHA-256 hash of rawToken in DB (never store raw token in DB)
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
     user.ssoToken = hashedToken;
-    user.ssoTokenExpire = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    user.ssoTokenExpire = new Date(Date.now() + 5 * 60 * 1000); // 5-minute window
     await user.save({ validateModifiedOnly: true });
 
-    res.json({ ssoToken: rawToken });
+    // 3. AES-256-CBC encrypt the rawToken before sending it in the URL
+    //    SSO_ENCRYPTION_KEY must be 32 chars (256 bits). Shared with Flask app.
+    const ssoKey = (process.env.SSO_ENCRYPTION_KEY || 'techiguru-sso-secret-key-32bytes').padEnd(32).slice(0, 32);
+    const iv = crypto.randomBytes(16); // fresh random IV per token
+    const key = Buffer.from(ssoKey, 'utf8');
+
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    let encrypted = cipher.update(rawToken, 'utf8', 'base64');
+    encrypted += cipher.final('base64');
+
+    // Pack iv + ciphertext into a single URL-safe base64 string
+    const encryptedToken = Buffer.concat([
+      iv,
+      Buffer.from(encrypted, 'base64'),
+    ]).toString('base64url');
+
+    res.json({ ssoToken: encryptedToken });
   } catch (error) {
     console.error('generateSSOToken error:', error);
     res.status(500).json({ message: 'Server Error' });

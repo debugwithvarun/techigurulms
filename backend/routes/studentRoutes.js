@@ -40,7 +40,15 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
 });
 
-// All routes require auth
+// ── Public routes (no auth header required) ─────────────────────────────────
+// Leaderboard — anyone can view
+router.get('/leaderboard', getLeaderboard);
+
+// Interview score submission — called by Flask app server-to-server
+// Uses userToken in body (JWT) instead of Bearer auth header
+router.post('/interview-score', submitInterviewScore);
+
+// All routes below require Bearer JWT auth ───────────────────────────────────
 router.use(protect);
 
 router.get('/dashboard', getStudentDashboard);
@@ -48,11 +56,5 @@ router.post('/cert-redirect/:certId', trackCertRedirect);
 router.post('/upload-cert/:certId', upload.single('certificate'), uploadStudentCertificate);
 router.get('/my-certs', getMyStudentCertificates);
 router.post('/unlock-course/:courseId', unlockCourseWithPoints);
-
-// ── Public leaderboard (no auth required) ───────────────────────────────────
-router.get('/leaderboard', getLeaderboard);
-
-// ── Interview score — called by Flask app (uses userToken from body) ────────
-router.post('/interview-score', submitInterviewScore);
 
 module.exports = router;
