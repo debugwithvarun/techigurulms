@@ -49,17 +49,25 @@ const allowedOrigins = [
   'https://imshopper-aimockinterview.hf.space',
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (Postman, mobile apps, etc.)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow Postman / mobile apps / server-to-server (no origin header)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+};
+
+// Must be FIRST — before any routes
+app.use(cors(corsOptions));
+
+// Explicitly respond 204 to every preflight OPTIONS request.
+// Without this line, browsers that send OPTIONS before POST/PUT
+// get no Access-Control-Allow-Origin header and block the real request.
+app.options('*', cors(corsOptions));
 
 // ── Body parsers ──────────────────────────────────────────────────────────────
 app.use(express.json());
