@@ -10,7 +10,7 @@ import Contact from "./components/Contact";
 import SignupPage from "./page/Signup";
 import LoginPage from "./page/Login";
 import ForgotPasswordPage from "./page/ForgotPassword";
-import HeadHrDashboard from "./page/";
+import HeadHrDashboard from "./page/HeadHrDashboard";
 import SubHRDashboard from "./page/SubHRDashboard";
 import InternDashboard from "./page/InternDashboard";
 import TutorDashboard from "./page/TutorDashbaord";
