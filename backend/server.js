@@ -19,11 +19,8 @@ const seedInstructors  = require('./utlis/Seeder');
 
 dotenv.config();
 
-// --- Ensure upload directories exist (create if missing) ---
-const UPLOAD_DIRS = [
-  'uploads',
-  'uploads/internship',
-];
+// --- Ensure upload directories exist ---
+const UPLOAD_DIRS = ['uploads', 'uploads/internship'];
 UPLOAD_DIRS.forEach(dir => {
   const fullPath = path.join(__dirname, dir);
   if (!fs.existsSync(fullPath)) {
@@ -32,52 +29,42 @@ UPLOAD_DIRS.forEach(dir => {
   }
 });
 
-// --- Connect to Database ---
+// --- Connect DB ---
 connectDB().then(() => {
   seedInstructors();
 });
 
 const app = express();
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
-const allowedOrigins = [
-  'http://techiguru.in',
-  'https://techiguru.in',
-  'http://www.techiguru.in',
-  'https://www.techiguru.in',
-  'http://localhost:5173',
-  'https://imshopper-aimockinterview.hf.space',
-];
 
+// ================== ✅ FIXED CORS ==================
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow Postman / mobile apps / server-to-server (no origin header)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`varun CORS blocked for origin: ${origin}`));
-  },
+  origin: [
+    'https://techiguru.in',
+    'https://www.techiguru.in',
+    'http://localhost:5173',
+    'https://imshopper-aimockinterview.hf.space'
+  ],
   credentials: true,
-  // methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  // allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-// Must be FIRST — before any routes
 app.use(cors(corsOptions));
 
-// Explicitly respond 204 to every preflight OPTIONS request.
-// Without this line, browsers that send OPTIONS before POST/PUT
-// get no Access-Control-Allow-Origin header and block the real request.
-app.options('*', cors(corsOptions));
+// 🔥 CRITICAL: handle preflight requests
+// app.options('*', cors(corsOptions));
+// ===================================================
 
-// ── Body parsers ──────────────────────────────────────────────────────────────
+
+// --- Body parsers ---
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Static files ──────────────────────────────────────────────────────────────
-// Serves everything under /uploads (resumes, offer letters, certificates, etc.)
+// --- Static files ---
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ── API Routes ────────────────────────────────────────────────────────────────
+// --- API Routes ---
 app.use('/api/auth',         authRoutes);
 app.use('/api/courses',      courseRoutes);
 app.use('/api/certificates', certificateRoutes);
@@ -87,17 +74,17 @@ app.use('/api/student',      studentRoutes);
 app.use('/api/contact',      contactRoutes);
 app.use('/api/internship',   internshipRoutes);
 
-// ── Health check ──────────────────────────────────────────────────────────────
+// --- Health check ---
 app.get('/', (req, res) => res.send('API is running...'));
 
-// ── 404 handler ───────────────────────────────────────────────────────────────
+// --- 404 handler ---
 app.use((req, res, next) => {
   const error = new Error(`Not Found — ${req.originalUrl}`);
   res.status(404);
   next(error);
 });
 
-// ── Global error handler ──────────────────────────────────────────────────────
+// --- Global error handler ---
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode).json({
@@ -106,8 +93,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ── Start server ──────────────────────────────────────────────────────────────
+// --- Start server ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`)
+  console.log(`🚀 Server running on port ${PORT}`)
 );
