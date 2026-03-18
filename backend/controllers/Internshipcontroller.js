@@ -13,7 +13,7 @@ const {
   sendSubHRAssignedEmail,
   sendCertificateApprovedEmail,
   sendMeetLinkEmail,
-} = require('../utils/internshipEmailService');
+} = require('../utlis/internshipEmailService');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC — Apply for internship  POST /api/internship/apply
