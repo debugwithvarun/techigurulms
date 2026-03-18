@@ -1,5 +1,4 @@
 import React from "react";
-
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CourseProvider } from "./context/CourseContext";
@@ -11,6 +10,9 @@ import Contact from "./components/Contact";
 import SignupPage from "./page/Signup";
 import LoginPage from "./page/Login";
 import ForgotPasswordPage from "./page/ForgotPassword";
+import HeadHrDashboard from "./page/";
+import SubHRDashboard from "./page/SubHRDashboard";
+import InternDashboard from "./page/InternDashboard";
 import TutorDashboard from "./page/TutorDashbaord";
 import AdminDashboard from "./page/AdminDashboard";
 import StudentDashboard from "./page/StudentDashboard";
@@ -28,6 +30,9 @@ import AdminLoginPage from "./components/Login/AdminLogin";
 import SearchPage from "./page/SearchPage";
 import CareersPage from "./page/CareersPage";
 import BlogPage from "./page/BlogPage";
+
+// ── NEW: SSO redirect bridge page (no Navbar/Footer — standalone fullscreen)
+import SsoRedirectPage from "./page/SsoRedirectPage";
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
@@ -94,19 +99,28 @@ function App() {
             </Route>
 
             {/* STANDALONE PAGES (no Navbar/Footer) */}
-            {/* LMS Player - private, enrolled students only */}
             <Route path="/course/:id/learn" element={<PrivateRoute><CourseDetail /></PrivateRoute>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
-            {/* Hidden admin login — not linked in UI */}
             <Route path="/secure-admin-signin" element={<AdminLoginPage />} />
+
+            {/* ── NEW: SSO redirect bridge — standalone, no Navbar/Footer ── */}
+            {/* Must be outside MainLayout so it renders as a clean fullscreen page */}
+            {/* Protected: unauthenticated users are redirected to login first   */}
+            <Route
+              path="/sso-redirect"
+              element={<PrivateRoute><SsoRedirectPage /></PrivateRoute>}
+            />
 
             {/* PROTECTED ROUTES */}
             <Route path="/dashboard" element={<PrivateRoute><TutorDashboard /></PrivateRoute>} />
             <Route path="/student-dashboard" element={<PrivateRoute><StudentDashboard /></PrivateRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/hr-dashboard"    element={<PrivateRoute><HeadHrDashboard /></PrivateRoute>} />
+<Route path="/subhr-dashboard" element={<PrivateRoute><SubHRDashboard /></PrivateRoute>} />
+<Route path="/intern-dashboard" element={<PrivateRoute><InternDashboard /></PrivateRoute>} />
 
             {/* 404 */}
             <Route path="*" element={

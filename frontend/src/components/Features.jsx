@@ -1,41 +1,45 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ThumbsUp, Award, Laptop, Sparkles, ArrowRight, Zap, Shield, Target, Star, Trophy } from 'lucide-react';
+import { ThumbsUp, Award, Laptop, Sparkles, ArrowRight, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const features = [
   {
-    title: "Stress-Free Learning",
-    desc: "Experience a calm, distraction-free environment that's been scientifically structured for maximum knowledge retention.",
+    title: 'Stress-Free Learning',
+    desc: 'A calm, distraction-free environment scientifically structured for maximum knowledge retention.',
     icon: ThumbsUp,
-    gradient: "from-sky-500 to-blue-600",
-    glow: "shadow-blue-500/20",
-    tag: "Most Popular",
+    gradient: 'from-sky-500 to-blue-600',
+    border: 'rgba(14,165,233,0.25)',
+    glow: 'rgba(14,165,233,0.12)',
+    tag: 'Most Popular',
   },
   {
-    title: "Industry Certificates",
-    desc: "Earn government-recognized certificates that carry real weight. Each cert comes with verifiable credentials and points.",
+    title: 'Industry Certificates',
+    desc: 'Government-recognized certs with verifiable credentials and real points that carry industry weight.',
     icon: Award,
-    gradient: "from-violet-500 to-purple-600",
-    glow: "shadow-violet-500/20",
-    tag: "Earn Points",
+    gradient: 'from-violet-500 to-purple-600',
+    border: 'rgba(139,92,246,0.3)',
+    glow: 'rgba(139,92,246,0.14)',
+    tag: 'Earn Points',
   },
   {
-    title: "Expert Mentorship",
-    desc: "Get 1-on-1 guidance from seasoned professionals who've navigated real industry challenges and career transitions.",
+    title: 'Expert Mentorship',
+    desc: "Get 1-on-1 guidance from seasoned professionals who've navigated real industry challenges.",
     icon: Laptop,
-    gradient: "from-orange-500 to-red-500",
-    glow: "shadow-orange-500/20",
-    tag: "Live Sessions",
+    gradient: 'from-orange-500 to-red-500',
+    border: 'rgba(249,115,22,0.25)',
+    glow: 'rgba(249,115,22,0.1)',
+    tag: 'Live Sessions',
   },
   {
-    title: "Skill-Based Curriculum",
-    desc: "Every module is laser-focused on job-ready skills. No fluff — just targeted learning that gets you hired faster.",
+    title: 'Skill-Based Curriculum',
+    desc: 'Every module is laser-focused on job-ready skills. No fluff — just targeted learning.',
     icon: Sparkles,
-    gradient: "from-emerald-500 to-teal-600",
-    glow: "shadow-emerald-500/20",
-    tag: "In-Demand",
-  }
+    gradient: 'from-emerald-500 to-teal-600',
+    border: 'rgba(16,185,129,0.25)',
+    glow: 'rgba(16,185,129,0.1)',
+    tag: 'In-Demand',
+  },
 ];
 
 const Features = () => {
@@ -43,78 +47,95 @@ const Features = () => {
 
   return (
     <section className="relative py-28 lg:py-36 bg-[#06060f] overflow-hidden">
-      {/* Grid background */}
-      <div className="absolute inset-0 pointer-events-none"
+      {/* Grid */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.4]"
         style={{
-          backgroundImage: 'linear-gradient(rgba(139,92,246,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.035) 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
+          backgroundImage: 'linear-gradient(rgba(139,92,246,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,0.06) 1px,transparent 1px)',
+          backgroundSize: '56px 56px',
         }} />
-      {/* Glow blobs */}
-      <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-purple-700/10 rounded-full blur-[120px] pointer-events-none" />
+      {/* Blobs */}
+      <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-purple-700/10 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-blue-700/8 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-16 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 lg:px-16 relative z-10">
 
         {/* Header */}
         <div className="text-center mb-20 max-w-3xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-bold uppercase tracking-widest mb-5">
-            <Star size={12} fill="currentColor" /> Why TechiGuru
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-[11px] font-bold uppercase tracking-widest mb-5"
+          >
+            <Sparkles size={11} fill="currentColor" /> Why TechiGuru
           </motion.div>
-          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
-            className="text-4xl lg:text-5xl font-black text-white tracking-tight mb-5 leading-tight">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+            className="text-4xl lg:text-5xl font-black text-white tracking-tight mb-5 leading-tight"
+          >
             Everything You Need to{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400">Level Up</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">Level Up</span>
           </motion.h2>
-          <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
-            className="text-slate-400 text-lg leading-relaxed">
-            We don't just provide courses — we build careers. From certificates with real points to 1-on-1 mentorship, every feature is designed to accelerate your success.
+          <motion.p
+            initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }}
+            className="text-slate-400 text-lg leading-relaxed"
+          >
+            We don't just provide courses — we build careers. From certs with real points to 1-on-1 mentorship, every feature accelerates your success.
           </motion.p>
         </div>
 
-        {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {features.map((f, i) => (
-            <motion.div key={i}
-              initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className={`group relative bg-white/[0.03] border border-white/8 hover:border-white/15 rounded-3xl p-7 flex flex-col transition-all duration-300 cursor-default shadow-xl ${f.glow} hover:shadow-2xl`}>
-              {/* Gradient overlay on hover */}
-              <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${f.gradient} opacity-0 group-hover:opacity-[0.05] transition-opacity duration-500 pointer-events-none`} />
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              whileHover={{ y: -10, scale: 1.02 }}
+              className="group relative rounded-3xl p-7 flex flex-col transition-all duration-300 cursor-default overflow-hidden"
+              style={{
+                background: 'rgba(255,255,255,0.025)',
+                border: `1px solid ${f.border}`,
+                boxShadow: `0 8px 32px ${f.glow}`,
+              }}
+            >
+              {/* Hover gradient fill */}
+              <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${f.gradient} opacity-0 group-hover:opacity-[0.06] transition-opacity duration-500 pointer-events-none`} />
+              {/* Top shimmer line */}
+              <div className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r ${f.gradient} opacity-50`} />
 
-              {/* Tag */}
-              <div className="flex items-center justify-between mb-6">
-                <div className={`w-13 h-13 w-14 h-14 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center shadow-lg shadow-black/30 group-hover:scale-110 transition-transform duration-300`}>
+              {/* Icon + tag */}
+              <div className="flex items-start justify-between mb-6">
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                   <f.icon size={22} className="text-white" />
                 </div>
-                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-gradient-to-r ${f.gradient} text-white`}>
+                <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-gradient-to-r ${f.gradient} text-white`}>
                   {f.tag}
                 </span>
               </div>
 
-              <h3 className="text-lg font-bold text-white mb-3 group-hover:text-purple-300 transition-colors">{f.title}</h3>
+              <h3 className="text-base font-bold text-white mb-2.5 group-hover:text-purple-300 transition-colors">{f.title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed mb-6 flex-grow">{f.desc}</p>
 
-              <div className="mt-auto flex items-center gap-1.5 text-sm font-semibold text-white/40 group-hover:text-purple-400 transition-colors">
-                Learn more <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              <div className="mt-auto flex items-center gap-1.5 text-xs font-semibold text-white/30 group-hover:text-purple-400 transition-colors">
+                Learn more <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Bottom CTA */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }}
-          className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-4">
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.35 }}
+          className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-4"
+        >
           <button onClick={() => navigate('/active-course')}
-            className="flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white font-bold shadow-xl shadow-violet-900/30 transition-all hover:scale-105">
-            <Trophy size={18} />Start Learning Today
+            className="group flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-violet-600 hover:bg-violet-500 text-white font-bold transition-all hover:scale-105 shadow-xl shadow-violet-900/30">
+            <Trophy size={17} /> Start Learning Today
           </button>
           <button onClick={() => navigate('/active-certificates')}
-            className="flex items-center gap-2.5 px-8 py-4 rounded-2xl border border-white/10 hover:bg-white/5 text-white/70 hover:text-white font-semibold transition-all">
-            <Award size={18} />Browse Certificates
+            className="flex items-center gap-2.5 px-8 py-4 rounded-2xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white font-semibold transition-all">
+            <Award size={17} /> Browse Certificates
           </button>
         </motion.div>
-
       </div>
     </section>
   );

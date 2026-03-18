@@ -1,20 +1,36 @@
 const express = require('express');
-const dotenv = require('dotenv');
-// const cors = require('cors');
-const connectDB = require('./config/db');
-const path = require('path');
+const dotenv  = require('dotenv');
+const cors    = require('cors');
+const path    = require('path');
+const fs      = require('fs');
 
 // --- Import Routes & Utils ---
-const authRoutes = require('./routes/authRoutes');
-const courseRoutes = require('./routes/courseRoutes');
+const authRoutes        = require('./routes/authRoutes');
+const courseRoutes      = require('./routes/courseRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
-const blogRoutes = require('./routes/blogRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const studentRoutes = require('./routes/studentRoutes');
-const contactRoutes = require('./routes/contactRoutes');
-const seedInstructors = require('./utlis/Seeder');
+const blogRoutes        = require('./routes/blogRoutes');
+const adminRoutes       = require('./routes/adminRoutes');
+const studentRoutes     = require('./routes/studentRoutes');
+const contactRoutes     = require('./routes/contactRoutes');
+const internshipRoutes  = require('./routes/internshipRoutes');
+
+const connectDB        = require('./config/db');
+const seedInstructors  = require('./utlis/Seeder');
 
 dotenv.config();
+
+// --- Ensure upload directories exist (create if missing) ---
+const UPLOAD_DIRS = [
+  'uploads',
+  'uploads/internship',
+];
+UPLOAD_DIRS.forEach(dir => {
+  const fullPath = path.join(__dirname, dir);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
+    console.log(`📁 Created directory: ${dir}`);
+  }
+});
 
 // --- Connect to Database ---
 connectDB().then(() => {
@@ -23,73 +39,67 @@ connectDB().then(() => {
 
 const app = express();
 
-// --- CORS CONFIGURATION (Fixed) ---
-const cors = require("cors");
-
+// ── CORS ──────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
-  "http://techiguru.in",
-  "https://techiguru.in",
-  "http://www.techiguru.in",
-  "https://www.techiguru.in",
-  "http://localhost:5173",
-  "https://imshopper-aimockinterview.hf.space",
+  'http://techiguru.in',
+  'https://techiguru.in',
+  'http://www.techiguru.in',
+  'https://www.techiguru.in',
+  'http://localhost:5173',
+  'https://imshopper-aimockinterview.hf.space',
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow requests with no origin (mobile apps, postman)
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Postman, mobile apps, etc.)
       if (!origin) return callback(null, true);
-      // allow only HTTPS origins
-      if (
-        allowedOrigins.includes(origin)
-      ) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS blocked: HTTPS only"));
-      }
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true,
   })
 );
 
+// ── Body parsers ──────────────────────────────────────────────────────────────
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// --- MOUNT ROUTES ---
-app.use('/api/auth', authRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/certificates', certificateRoutes);
-app.use('/api/blogs', blogRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/student', studentRoutes);
-app.use('/api/contact', contactRoutes);
-
-// --- STATIC FOLDER ---
-// Serve images/files uploaded to /uploads
+// ── Static files ──────────────────────────────────────────────────────────────
+// Serves everything under /uploads (resumes, offer letters, certificates, etc.)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.get('/', (req, res) => {
-  res.send('API is running...');
-});
+// ── API Routes ────────────────────────────────────────────────────────────────
+app.use('/api/auth',         authRoutes);
+app.use('/api/courses',      courseRoutes);
+app.use('/api/certificates', certificateRoutes);
+app.use('/api/blogs',        blogRoutes);
+app.use('/api/admin',        adminRoutes);
+app.use('/api/student',      studentRoutes);
+app.use('/api/contact',      contactRoutes);
+app.use('/api/internship',   internshipRoutes);
 
-// 404 Handler
+// ── Health check ──────────────────────────────────────────────────────────────
+app.get('/', (req, res) => res.send('API is running...'));
+
+// ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
+  const error = new Error(`Not Found — ${req.originalUrl}`);
   res.status(404);
   next(error);
 });
 
-// Global Error Handler
+// ── Global error handler ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
-  res.json({
+  res.status(statusCode).json({
     message: err.message,
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 });
 
+// ── Start server ──────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-
-
-app.listen(PORT, () => console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`)
+);

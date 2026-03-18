@@ -1,32 +1,131 @@
-/* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Search, ShoppingCart, ChevronDown, ChevronRight, 
-  LogIn, Menu, X, Globe, BookOpen, Smartphone, PlayCircle, PauseCircle,
-  LayoutDashboard, LogOut, User, Award, GraduationCap, Briefcase, Loader
+  Search, ChevronDown,
+  Menu, X, PlayCircle, PauseCircle,
+  LayoutDashboard, LogOut, User, Award, GraduationCap, Briefcase, Loader,
+  MessageSquare, UserCheck, Users, BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
+const BASE_NAV_LINKS = [
+  { name: 'Home', path: '/', hasDropdown: false },
+  { 
+    name: 'Training', 
+    hasDropdown: true, 
+    dropdownItems: [
+      { title: 'Active Courses',   path: '/active-course',   icon: <PlayCircle  size={16}/> }, 
+      { title: 'Archived Courses', path: '/inactive-course', icon: <PauseCircle size={16}/> }
+    ] 
+  },
+  { 
+    name: 'Certificates', 
+    hasDropdown: true, 
+    dropdownItems: [
+      { title: 'Active Certificates',   path: '/active-certificates',   icon: <Award       size={16}/> }, 
+      { title: 'Archived Certificates', path: '/inactive-certificates', icon: <PauseCircle size={16}/> }
+    ] 
+  },
+  {
+    name: 'Our Service',
+    hasDropdown: true,
+    dropdownItems: [
+      { 
+        title: 'AI Mock Interview', 
+        path: 'https://imshopper-aimockinterview.hf.space', 
+        isExternal: true, 
+        icon: <PlayCircle size={16}/> 
+      },
+    ]
+  },
+  { name: 'About', path: '/about', hasDropdown: false },
+  // ── Contact now has two sub-options ───────────────────────────────────────
+  {
+    name: 'Contact',
+    hasDropdown: true,
+    dropdownItems: [
+      {
+        title: 'Send a Query',
+        path: '/contact',
+        icon: <MessageSquare size={16}/>,
+        state: { tab: 'contact' },
+      },
+      {
+        title: 'Apply for Internship',
+        path: '/contact',
+        icon: <Briefcase size={16}/>,
+        state: { tab: 'internship' },
+        badge: 'Hiring',
+      },
+    ],
+  },
+];
+
+// ── Dashboard link per role ───────────────────────────────────────────────────
+const ROLE_LINKS = {
+  instructor: { name: 'Dashboard',      path: '/dashboard',         hasDropdown: false },
+  admin:      { name: 'Admin',          path: '/admin',             hasDropdown: false },
+  student:    { name: 'My Dashboard',   path: '/student-dashboard', hasDropdown: false },
+  headhr:     { name: 'HR Dashboard',   path: '/hr-dashboard',      hasDropdown: false },
+  subhr:      { name: 'Sub HR',         path: '/subhr-dashboard',   hasDropdown: false },
+  intern:     { name: 'Intern Portal',  path: '/intern-dashboard',  hasDropdown: false },
+};
+
+// ── Profile-dropdown entries per role ─────────────────────────────────────────
+const ROLE_PROFILE_ITEMS = {
+  instructor: [
+    { label: 'Instructor Dashboard', path: '/dashboard',         icon: LayoutDashboard },
+    { label: 'My Profile',           path: '/profile',           icon: User },
+  ],
+  student: [
+    { label: 'My Dashboard',         path: '/student-dashboard', icon: LayoutDashboard },
+  ],
+  admin: [
+    { label: 'Admin Panel',          path: '/admin',             icon: LayoutDashboard },
+  ],
+  headhr: [
+    { label: 'HR Dashboard',         path: '/hr-dashboard',      icon: UserCheck },
+  ],
+  subhr: [
+    { label: 'Sub HR Dashboard',     path: '/subhr-dashboard',   icon: Users },
+  ],
+  intern: [
+    { label: 'Intern Portal',        path: '/intern-dashboard',  icon: BookOpen },
+  ],
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Navigate to /contact with the correct tab pre-selected */
+const useContactNav = () => {
+  const navigate = useNavigate();
+  return useCallback((tab = 'contact') => {
+    navigate('/contact', { state: { tab } });
+  }, [navigate]);
+};
+
 const Navbar = () => {
   const { user, logout } = useAuth(); 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
 
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false); 
-  const [ssoLoading, setSsoLoading] = useState(false);
-  
-  // New states for Auth dropdowns
-  const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
+  const [activeDropdown,     setActiveDropdown]     = useState(null);
+  const [isMobileMenuOpen,   setIsMobileMenuOpen]   = useState(false);
+  const [isSearchOpen,       setIsSearchOpen]       = useState(false);
+  const [scrolled,           setScrolled]           = useState(false);
+  const [profileOpen,        setProfileOpen]        = useState(false); 
+  const [ssoLoading,         setSsoLoading]         = useState(false);
+  const [loginDropdownOpen,  setLoginDropdownOpen]  = useState(false);
   const [signupDropdownOpen, setSignupDropdownOpen] = useState(false);
 
-  const hideNavbarPaths = ['/login', '/signup'];
+  const profileRef = useRef(null);
+
+  const navLinks = [
+    ...BASE_NAV_LINKS,
+    ...(user?.role && ROLE_LINKS[user.role] ? [ROLE_LINKS[user.role]] : []),
+  ];
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -34,77 +133,65 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    if (profileOpen) document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [profileOpen]);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const handleLogout = () => {
-      logout();
-      setProfileOpen(false);
-      setIsMobileMenuOpen(false);
-      navigate('/login');
+    logout();
+    setProfileOpen(false);
+    setIsMobileMenuOpen(false);
+    navigate('/login');
   };
 
-  // SSO handler — fetches a short-lived token and redirects to AI Interview app
-  const handleServiceClick = async (e, item) => {
+  // ── SSO handler ─────────────────────────────────────────────────────────────
+  const handleServiceClick = useCallback(async (e, item) => {
     e.preventDefault();
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    if (!item.isExternal) {
-      navigate(item.path);
-      return;
-    }
+
+    if (!user) { navigate('/login'); return; }
+    if (!item.isExternal) { navigate(item.path); return; }
+
     setSsoLoading(true);
     try {
       const { data } = await api.get('/auth/sso-token');
-      const url = `${item.path}?sso=${data.ssoToken}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } catch {
-      // Fallback to direct link if SSO fails
-      window.open(item.path, '_blank', 'noopener,noreferrer');
+      const destination = encodeURIComponent(item.path);
+      const token       = encodeURIComponent(data.ssoToken);
+      navigate(`/sso-redirect?token=${token}&to=${destination}`);
+    } catch (err) {
+      console.error('SSO token fetch failed:', err);
+      setSsoLoading('error');
+      setTimeout(() => setSsoLoading(false), 3000);
     } finally {
-      setSsoLoading(false);
+      setSsoLoading(prev => prev === 'error' ? prev : false);
     }
+  }, [user, navigate]);
+
+  // ── Contact tab navigation ───────────────────────────────────────────────────
+  const handleContactItem = useCallback((e, item) => {
+    e.preventDefault();
+    navigate(item.path, { state: item.state || {} });
+    setActiveDropdown(null);
+  }, [navigate]);
+
+  const openDropdown = (name) => {
+    setActiveDropdown(name);
+    setProfileOpen(false);
   };
 
+  const profileItems = ROLE_PROFILE_ITEMS[user?.role] || [];
+
+  const hideNavbarPaths = ['/login', '/signup', '/sso-redirect'];
   if (hideNavbarPaths.includes(location.pathname)) return null;
-
-  // --- NAVIGATION DATA ---
-  const navLinks = [
-    { name: 'Home', path: '/', hasDropdown: false },
-    { 
-      name: 'Training', 
-      hasDropdown: true, 
-      dropdownItems: [
-        { title: 'Active Courses', path: '/active-course', icon: <PlayCircle size={16}/> }, 
-        { title: 'Archived Courses', path: '/inactive-course', icon: <PauseCircle size={16}/> }
-      ] 
-    },
-    { 
-      name: 'Certificates', 
-      hasDropdown: true, 
-      dropdownItems: [
-        { title: 'Active Certificates', path: '/active-certificates', icon: <Award size={16}/> }, 
-        { title: 'Archived Certificates', path: '/inactive-certificates', icon: <PauseCircle size={16}/> }
-      ] 
-    },
-    // 🔥 NEW: Our Service Dropdown with external links
-    {
-      name: 'Our Service',
-      hasDropdown: true,
-      dropdownItems: [
-        { title: 'AI Mock Interview', path: 'https://imshopper-aimockinterview.hf.space', isExternal: true, icon: <PlayCircle size={16}/> },
-        // { title: 'Google', path: 'https://www.google.com', isExternal: true, icon: <Globe size={16}/> }
-      ]
-    },
-    { name: 'About', path: '/about', hasDropdown: false },
-    { name: 'Contact', path: '/contact', hasDropdown: false },
-    // Dashboard only for instructors
-    ...(user?.role === 'instructor' ? [{ name: 'Dashboard', path: '/dashboard', hasDropdown: false }] : []),
-    // Admin panel only for admins
-    ...(user?.role === 'admin' ? [{ name: 'Admin', path: '/admin', hasDropdown: false }] : []),
-    // Student dashboard only for students
-    ...(user?.role === 'student' ? [{ name: 'My Dashboard', path: '/student-dashboard', hasDropdown: false }] : []),
-  ];
-
 
   return (
     <>
@@ -135,7 +222,7 @@ const Navbar = () => {
               <div
                 key={link.name}
                 className="relative h-full flex items-center"
-                onMouseEnter={() => link.hasDropdown && setActiveDropdown(link.name)}
+                onMouseEnter={() => link.hasDropdown && openDropdown(link.name)}
                 onMouseLeave={() => setActiveDropdown(null)}
               >
                 {!link.hasDropdown ? (
@@ -155,7 +242,6 @@ const Navbar = () => {
                   </button>
                 )}
 
-                {/* Desktop Dropdown */}
                 <AnimatePresence>
                   {activeDropdown === link.name && link.dropdownItems && (
                     <motion.div
@@ -166,22 +252,49 @@ const Navbar = () => {
                       className="absolute top-full -left-4 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
                     >
                       <div className="p-2">
-                      {link.dropdownItems.map((item, idx) => (
-                          // Auth-guarded or external link
-                          item.isExternal ? (
-                            <button
-                              key={idx}
-                              onClick={(e) => handleServiceClick(e, item)}
-                              disabled={ssoLoading}
-                              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors group"
-                            >
-                              <span className="text-purple-400 group-hover:text-purple-600">
-                                {ssoLoading ? <Loader size={16} className="animate-spin"/> : item.icon}
-                              </span>
-                              {item.title}
-                              {/* {!user && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-600">Login required</span>} */}
-                            </button>
-                          ) : (
+                        {link.dropdownItems.map((item, idx) => {
+                          // ── Contact sub-items ───────────────────────────
+                          if (item.state) {
+                            return (
+                              <button
+                                key={idx}
+                                onClick={(e) => handleContactItem(e, item)}
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors group"
+                              >
+                                <span className="text-purple-400 group-hover:text-purple-600 shrink-0">
+                                  {item.icon}
+                                </span>
+                                <span className="flex-1 text-left">{item.title}</span>
+                                {item.badge && (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700 tracking-wide">
+                                    {item.badge}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          }
+
+                          // ── External SSO items ──────────────────────────
+                          if (item.isExternal) {
+                            return (
+                              <button
+                                key={idx}
+                                onClick={(e) => handleServiceClick(e, item)}
+                                disabled={!!ssoLoading}
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors group disabled:opacity-60"
+                              >
+                                <span className="text-purple-400 group-hover:text-purple-600">
+                                  {ssoLoading === true    && <Loader size={16} className="animate-spin"/>}
+                                  {ssoLoading === 'error' && <span className="text-red-500 text-xs">Failed — retry?</span>}
+                                  {!ssoLoading            && item.icon}
+                                </span>
+                                {item.title}
+                              </button>
+                            );
+                          }
+
+                          // ── Regular internal links ───────────────────────
+                          return (
                             <Link
                               key={idx}
                               to={item.path}
@@ -192,8 +305,8 @@ const Navbar = () => {
                               </span>
                               {item.title}
                             </Link>
-                          )
-                        ))}
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -205,7 +318,7 @@ const Navbar = () => {
           {/* Right Action Buttons */}
           <div className="flex items-center gap-4">
             
-            {/* Search Bar */}
+            {/* Search */}
             <div className="flex items-center">
               <AnimatePresence>
                 {isSearchOpen && (
@@ -237,73 +350,77 @@ const Navbar = () => {
               </button>
             </div>
 
-
             {/* Auth State */}
             {user ? (
-              <div className="flex items-center gap-4 pl-4 border-l border-gray-200 relative">
-                
-                {/* Profile Dropdown Trigger */}
+              <div ref={profileRef} className="flex items-center gap-4 pl-4 border-l border-gray-200 relative">
                 <button 
-                    onClick={() => setProfileOpen(!profileOpen)}
-                    className="flex items-center gap-2 hover:bg-gray-50 rounded-full pr-3 pl-1 py-1 transition-colors border border-transparent hover:border-gray-200"
+                  onClick={() => setProfileOpen(prev => !prev)}
+                  className="flex items-center gap-2 hover:bg-gray-50 rounded-full pr-3 pl-1 py-1 transition-colors border border-transparent hover:border-gray-200"
                 >
                   <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold border border-purple-200">
-                      {user.name?.[0]?.toUpperCase() || 'U'}
+                    {user.name?.[0]?.toUpperCase() || 'U'}
                   </div>
-                  <span className="text-sm font-semibold text-slate-700 hidden md:block max-w-[100px] truncate">{user.name}</span>
+                  <span className="text-sm font-semibold text-slate-700 hidden md:block max-w-[100px] truncate">
+                    {user.name}
+                  </span>
                   <ChevronDown size={14} className="text-slate-400 hidden md:block"/>
                 </button>
 
-                {/* Profile Dropdown Menu */}
                 <AnimatePresence>
-                    {profileOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-1"
+                  {profileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden py-1"
+                    >
+                      {/* User info */}
+                      <div className="px-4 py-3 border-b border-gray-50">
+                        <p className="text-sm font-bold text-slate-800 truncate">{user.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                        {/* Role pill */}
+                        <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize
+                          bg-purple-100 text-purple-700">
+                          {user.role}
+                        </span>
+                      </div>
+
+                      {/* Role-specific links */}
+                      {profileItems.map(({ label, path, icon: Icon }) => (
+                        <Link
+                          key={path}
+                          to={path}
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors"
                         >
-                            <div className="px-4 py-3 border-b border-gray-50">
-                                <p className="text-sm font-bold text-slate-800 truncate">{user.name}</p>
-                                <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                            </div>
-                            
-                            {user?.role === 'instructor' && (
-                              <>
-                                <Link to="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
-                                    <LayoutDashboard size={16}/> Instructor Dashboard
-                                </Link>
-                              <Link to="/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
-                                  <User size={16}/> My Profile
-                              </Link>
-                              </>
-                            )}
+                          <Icon size={16}/> {label}
+                        </Link>
+                      ))}
 
-                            {user?.role === 'student' && (
-                              <Link to="/student-dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
-                                  <LayoutDashboard size={16}/> My Dashboard
-                              </Link>
-                            )}
+                      {/* Intern shortcut to Apply for Internship if student */}
+                      {user.role === 'student' && (
+                        <button
+                          onClick={() => { setProfileOpen(false); navigate('/contact', { state: { tab: 'internship' } }); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                        >
+                          <Briefcase size={16}/> Apply for Internship
+                        </button>
+                      )}
 
-                            {user?.role === 'admin' && (
-                              <Link to="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors">
-                                  <LayoutDashboard size={16}/> Admin Panel
-                              </Link>
-                            )}
-                            
-
-                            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-50 mt-1">
-                                <LogOut size={16}/> Sign Out
-                            </button>
-                        </motion.div>
-                    )}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-50 mt-1"
+                      >
+                        <LogOut size={16}/> Sign Out
+                      </button>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
-
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-4 pl-4 border-l border-gray-200">
                 
-                {/* LOGIN DROPDOWN */}
+                {/* Login Dropdown */}
                 <div 
                   className="relative"
                   onMouseEnter={() => setLoginDropdownOpen(true)}
@@ -329,7 +446,7 @@ const Navbar = () => {
                   </AnimatePresence>
                 </div>
 
-                {/* SIGNUP DROPDOWN */}
+                {/* Signup Dropdown */}
                 <div 
                   className="relative"
                   onMouseEnter={() => setSignupDropdownOpen(true)}
@@ -354,7 +471,6 @@ const Navbar = () => {
                     )}
                   </AnimatePresence>
                 </div>
-
               </div>
             )}
 
@@ -369,30 +485,23 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* ── Mobile Menu Overlay ─────────────────────────────────────────────── */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
               className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[101] lg:hidden"
             />
             <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed top-0 right-0 h-full w-[280px] bg-white shadow-2xl z-[102] lg:hidden flex flex-col"
             >
               <div className="p-6 flex items-center justify-between border-b border-gray-100">
                 <span className="text-lg font-bold text-slate-800">Menu</span>
-                <button 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"
-                >
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors">
                   <X size={20} className="text-slate-500" />
                 </button>
               </div>
@@ -409,7 +518,14 @@ const Navbar = () => {
                         {link.name}
                       </Link>
                     ) : (
-                      <MobileDropdown link={link} closeMenu={() => setIsMobileMenuOpen(false)} />
+                      <MobileDropdown 
+                        link={link} 
+                        closeMenu={() => setIsMobileMenuOpen(false)}
+                        onServiceClick={handleServiceClick}
+                        onContactItem={handleContactItem}
+                        ssoLoading={ssoLoading}
+                        user={user}
+                      />
                     )}
                   </div>
                 ))}
@@ -420,28 +536,36 @@ const Navbar = () => {
                   <>
                     <div className="space-y-2">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Log In</p>
-                      <Link to="/login?role=student" className="flex items-center gap-3 w-full py-3 px-4 rounded-lg border border-gray-200 font-semibold text-slate-600 hover:bg-white transition-colors">
+                      <Link to="/login?role=student" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 rounded-lg border border-gray-200 font-semibold text-slate-600 hover:bg-white transition-colors">
                         <GraduationCap size={18} className="text-purple-500"/> As Student
                       </Link>
-                      <Link to="/login?role=instructor" className="flex items-center gap-3 w-full py-3 px-4 rounded-lg border border-gray-200 font-semibold text-slate-600 hover:bg-white transition-colors">
+                      <Link to="/login?role=instructor" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 w-full py-3 px-4 rounded-lg border border-gray-200 font-semibold text-slate-600 hover:bg-white transition-colors">
                         <Briefcase size={18} className="text-purple-500"/> As Instructor
                       </Link>
                     </div>
-
                     <div className="space-y-2 pt-4 border-t border-gray-200">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sign Up</p>
-                      <Link to="/signup?role=student" className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-purple-600 text-white font-semibold shadow-md hover:bg-purple-700 transition-colors">
+                      <Link to="/signup?role=student" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-purple-600 text-white font-semibold shadow-md hover:bg-purple-700 transition-colors">
                         <GraduationCap size={18}/> Student Sign Up
                       </Link>
-                      <Link to="/signup?role=instructor" className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 transition-colors">
+                      <Link to="/signup?role=instructor" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-slate-900 text-white font-semibold shadow-md hover:bg-slate-800 transition-colors">
                         <Briefcase size={18}/> Instructor Sign Up
                       </Link>
                     </div>
                   </>
                 ) : (
-                   <button onClick={handleLogout} className="w-full py-3 rounded-lg border border-red-100 text-red-600 font-semibold bg-red-50 flex items-center justify-center gap-2">
+                  <>
+                    {/* Show role dashboard links in mobile footer too */}
+                    {profileItems.map(({ label, path, icon: Icon }) => (
+                      <Link key={path} to={path} onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-3 w-full py-3 px-4 rounded-lg border border-gray-200 font-semibold text-slate-600 hover:bg-white transition-colors">
+                        <Icon size={18} className="text-purple-500"/> {label}
+                      </Link>
+                    ))}
+                    <button onClick={handleLogout} className="w-full py-3 rounded-lg border border-red-100 text-red-600 font-semibold bg-red-50 flex items-center justify-center gap-2">
                       <LogOut size={18}/> Sign Out
-                   </button>
+                    </button>
+                  </>
                 )}
               </div>
             </motion.div>
@@ -452,56 +576,91 @@ const Navbar = () => {
   );
 };
 
-// Helper Component for Mobile Accordion
-const MobileDropdown = ({ link, closeMenu }) => {
+
+// ── MobileDropdown ────────────────────────────────────────────────────────────
+const MobileDropdown = ({ link, closeMenu, onServiceClick, onContactItem, ssoLoading, user }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleExternalClick = async (e, item) => {
+    await onServiceClick(e, item);
+    closeMenu();
+  };
+
+  const handleContactClick = (e, item) => {
+    onContactItem(e, item);
+    closeMenu();
+  };
 
   return (
     <div>
       <button 
-        onClick={() => setIsOpen(!isOpen)} 
+        onClick={() => setIsOpen(prev => !prev)} 
         className="w-full flex items-center justify-between py-3 text-base font-medium text-slate-600"
       >
         {link.name}
-        <ChevronDown 
-          size={16} 
-          className={`transition-transform duration-200 ${isOpen ? 'rotate-180 text-purple-600' : 'text-gray-400'}`} 
-        />
+        <ChevronDown size={16} className={`transition-transform duration-200 ${isOpen ? 'rotate-180 text-purple-600' : 'text-gray-400'}`} />
       </button>
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
             <div className="pl-4 pb-2 space-y-3">
-              {link.dropdownItems.map((item, idx) => (
-                // 🔥 Mobile dropdown external link with SSO
-                item.isExternal ? (
-                  <button
-                    key={idx}
-                    onClick={(e) => { handleServiceClick(e, item); closeMenu(); }}
-                    disabled={ssoLoading}
-                    className="w-full flex items-center gap-3 py-2 text-sm text-slate-500 hover:text-purple-600"
-                  >
-                    <span className="text-purple-400">{ssoLoading ? <Loader size={14} className="animate-spin"/> : item.icon}</span>
-                    {item.title}
-                    {!user && <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-600">Login</span>}
-                  </button>
-                ) : (
-                  <Link 
-                    key={idx} 
-                    to={item.path} 
-                    onClick={closeMenu}
-                    className="flex items-center gap-3 py-2 text-sm text-slate-500 hover:text-purple-600"
-                  >
+              {link.dropdownItems.map((item, idx) => {
+
+                // ── Contact state-based items ─────────────────────────────
+                if (item.state) {
+                  return (
+                    <button
+                      key={idx}
+                      onClick={(e) => handleContactClick(e, item)}
+                      className="w-full flex items-center gap-3 py-2 text-sm text-slate-500 hover:text-purple-600 text-left"
+                    >
+                      <span className="text-purple-400 shrink-0">{item.icon}</span>
+                      <span className="flex-1">{item.title}</span>
+                      {item.badge && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700">
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                }
+
+                // ── External SSO items ────────────────────────────────────
+                if (item.isExternal) {
+                  return (
+                    <button
+                      key={idx}
+                      onClick={(e) => handleExternalClick(e, item)}
+                      disabled={!!ssoLoading}
+                      className="w-full flex items-center gap-3 py-2 text-sm text-slate-500 hover:text-purple-600 disabled:opacity-60"
+                    >
+                      <span className="text-purple-400">
+                        {ssoLoading === true    && <Loader size={14} className="animate-spin"/>}
+                        {ssoLoading === 'error' && <span className="text-red-500 text-xs">Failed</span>}
+                        {!ssoLoading            && item.icon}
+                      </span>
+                      {item.title}
+                      {!user && (
+                        <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-600">
+                          Login required
+                        </span>
+                      )}
+                    </button>
+                  );
+                }
+
+                // ── Regular internal links ────────────────────────────────
+                return (
+                  <Link key={idx} to={item.path} onClick={closeMenu}
+                    className="flex items-center gap-3 py-2 text-sm text-slate-500 hover:text-purple-600">
                     <span className="text-purple-400">{item.icon}</span>
                     {item.title}
                   </Link>
-                )
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         )}
