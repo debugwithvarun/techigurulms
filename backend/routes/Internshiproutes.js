@@ -38,7 +38,7 @@ const {
   getHRUsers,
   createHRUser,
   deleteHRUser,
-} = require('../controllers/internshipController');
+} = require('../controllers/Internshipcontroller');
 
 // ── Multer for resume + offer letter + certificate uploads ────────────────────
 const storage = multer.diskStorage({

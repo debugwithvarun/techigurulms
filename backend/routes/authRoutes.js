@@ -1,8 +1,89 @@
+// const express = require('express');
+// const router = express.Router();
+// const multer = require('multer');
+// const path = require('path');
+// const fs = require('fs');
+// const {
+//   registerUser,
+//   loginUser,
+//   getMe,
+//   updateUserProfile,
+//   getMyEnrollments,
+//   getPublicProfile,
+//   uploadAvatar,
+//   sendSignupOTP,
+//   verifyAndRegister,
+//   forgotPassword,
+//   resetPasswordWithOTP,
+//   sendVerifyAccountOTP,
+//   verifyAccountWithOTP,
+//   verifyEmailByToken,
+//   generateSSOToken,
+//   validateSSOToken,
+// } = require('../controllers/authController');
+// const { protect } = require('../middleware/authMiddleware');
+
+// // ── Multer setup for avatar uploads ───────────────────────────────────────────
+// const avatarDir = path.join(__dirname, '../uploads/avatars');
+// if (!fs.existsSync(avatarDir)) fs.mkdirSync(avatarDir, { recursive: true });
+
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => cb(null, avatarDir),
+//   filename: (req, file, cb) => {
+//     const ext = path.extname(file.originalname).toLowerCase();
+//     cb(null, `avatar-${req.user._id}-${Date.now()}${ext}`);
+//   }
+// });
+// const upload = multer({
+//   storage,
+//   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+//   fileFilter: (req, file, cb) => {
+//     const allowed = /jpeg|jpg|png|webp|gif/;
+//     const valid = allowed.test(path.extname(file.originalname).toLowerCase()) && allowed.test(file.mimetype);
+//     valid ? cb(null, true) : cb(new Error('Only image files are allowed'));
+//   }
+// });
+
+// // ── Public Routes ──────────────────────────────────────────────────────────────
+
+// // Legacy register (no OTP) — kept for backward compat
+// router.post('/register', registerUser);
+// router.post('/login', loginUser);
+// router.get('/users/:id/profile', getPublicProfile);
+
+// // OTP-based Signup
+// router.post('/send-signup-otp', sendSignupOTP);
+// router.post('/verify-register', verifyAndRegister);
+
+// // Forgot / Reset Password via OTP
+// router.post('/forgot-password', forgotPassword);
+// router.post('/reset-password-otp', resetPasswordWithOTP);
+
+// // Manual account verification (for unverified users who can't log in)
+// router.post('/send-verify-otp', sendVerifyAccountOTP);       // Step 1: send OTP to email
+// router.post('/verify-account-otp', verifyAccountWithOTP);    // Step 2: submit OTP to verify
+
+// // Admin token-based verification link (redirect via backend)
+// router.get('/verify-email', verifyEmailByToken);             // Clicked from email link
+
+// // ── Protected Routes ───────────────────────────────────────────────────────────
+// router.get('/me', protect, getMe);
+// router.put('/profile', protect, updateUserProfile);
+// router.get('/my-enrollments', protect, getMyEnrollments);
+// router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
+
+// // ── SSO Routes (AI Interview cross-app auth) ────────────────────────────────
+// router.get('/sso-token', protect, generateSSOToken);        // Frontend fetches short-lived token
+// router.post('/validate-sso', validateSSOToken);             // Flask app validates token server-to-server
+
+// module.exports = router;
+
+
 const express = require('express');
-const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const router  = express.Router();
+const multer  = require('multer');
+const path    = require('path');
+const fs      = require('fs');
 const {
   registerUser,
   loginUser,
@@ -29,51 +110,58 @@ if (!fs.existsSync(avatarDir)) fs.mkdirSync(avatarDir, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, avatarDir),
-  filename: (req, file, cb) => {
+  filename:    (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     cb(null, `avatar-${req.user._id}-${Date.now()}${ext}`);
   }
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits:     { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|webp|gif/;
-    const valid = allowed.test(path.extname(file.originalname).toLowerCase()) && allowed.test(file.mimetype);
+    const valid   = allowed.test(path.extname(file.originalname).toLowerCase()) &&
+                    allowed.test(file.mimetype);
     valid ? cb(null, true) : cb(new Error('Only image files are allowed'));
   }
 });
 
 // ── Public Routes ──────────────────────────────────────────────────────────────
 
-// Legacy register (no OTP) — kept for backward compat
+// Legacy register (no OTP)
 router.post('/register', registerUser);
+
+// Single login endpoint — handles ALL roles:
+// student, instructor, admin, headhr, subhr, intern
+// loginAs field (optional) guards student vs instructor portals
+// HR portals don't send loginAs — frontend checks returned role
 router.post('/login', loginUser);
+
 router.get('/users/:id/profile', getPublicProfile);
 
-// OTP-based Signup
-router.post('/send-signup-otp', sendSignupOTP);
-router.post('/verify-register', verifyAndRegister);
+// OTP-based Signup (student/instructor only — HR created by admin)
+router.post('/send-signup-otp',  sendSignupOTP);
+router.post('/verify-register',  verifyAndRegister);
 
 // Forgot / Reset Password via OTP
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password-otp', resetPasswordWithOTP);
+router.post('/forgot-password',       forgotPassword);
+router.post('/reset-password-otp',    resetPasswordWithOTP);
 
-// Manual account verification (for unverified users who can't log in)
-router.post('/send-verify-otp', sendVerifyAccountOTP);       // Step 1: send OTP to email
-router.post('/verify-account-otp', verifyAccountWithOTP);    // Step 2: submit OTP to verify
+// Manual account verification (for users locked out before verifying)
+router.post('/send-verify-otp',       sendVerifyAccountOTP);
+router.post('/verify-account-otp',    verifyAccountWithOTP);
 
-// Admin token-based verification link (redirect via backend)
-router.get('/verify-email', verifyEmailByToken);             // Clicked from email link
+// Admin token-based verification link (clicked from email)
+router.get('/verify-email',           verifyEmailByToken);
 
 // ── Protected Routes ───────────────────────────────────────────────────────────
-router.get('/me', protect, getMe);
-router.put('/profile', protect, updateUserProfile);
-router.get('/my-enrollments', protect, getMyEnrollments);
-router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
+router.get('/me',              protect, getMe);
+router.put('/profile',         protect, updateUserProfile);
+router.get('/my-enrollments',  protect, getMyEnrollments);
+router.post('/avatar',         protect, upload.single('avatar'), uploadAvatar);
 
-// ── SSO Routes (AI Interview cross-app auth) ────────────────────────────────
-router.get('/sso-token', protect, generateSSOToken);        // Frontend fetches short-lived token
-router.post('/validate-sso', validateSSOToken);             // Flask app validates token server-to-server
+// ── SSO Routes (AI Interview cross-app auth) ───────────────────────────────────
+router.get('/sso-token',    protect, generateSSOToken);   // Frontend fetches short-lived token
+router.post('/validate-sso', validateSSOToken);            // Flask app validates token server-to-server
 
 module.exports = router;

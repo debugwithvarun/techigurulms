@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { Briefcase } from 'lucide-react';           // icon for HR tab
+import HRManagement from '../components/HRManagement'; // the component we built
 import {
     Users, BookOpen, TrendingUp, Clock, CheckCircle, XCircle, Eye,
     BarChart3, GraduationCap, AlertCircle, RefreshCw, Medal, ChevronRight,
@@ -558,6 +560,7 @@ const AdminDashboard = () => {
     };
 
     const TABS = [
+
         { id: 'overview',      label: 'Overview',      icon: BarChart3 },
         { id: 'instructors',   label: 'Instructors',   icon: UserCheck,   badge: pendingInstructors.length },
         { id: 'courses',       label: 'Courses',       icon: BookOpen,    badge: pendingCourses.length },
@@ -566,6 +569,7 @@ const AdminDashboard = () => {
         { id: 'contacts',      label: 'Contacts',      icon: MessageSquare, badge: contacts.filter(c => c.status === 'unread').length || null },
         { id: 'unverified',    label: 'Unverified',    icon: ShieldAlert, badge: unverifiedUsers.length },
         { id: 'student-certs', label: 'Student Certs', icon: Award,       badge: studentCerts.filter(c => c.status === 'pending').length },
+        { id: 'hr-management', label: 'HR Management', icon: Briefcase },
         { id: 'analytics',     label: 'Analytics',     icon: TrendingUp },
     ];
 
@@ -930,6 +934,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
+{activeTab === 'hr-management' && <HRManagement />}
                     {/* ── ANALYTICS ── */}
                     {activeTab === 'analytics' && (
                         <div className="space-y-5 max-w-6xl">

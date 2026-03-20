@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Disallow sensitive or unnecessary folders
+Disallow: /admin/
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /api/
+
+# Allow important assets
+Allow: /static/
+Allow: /assets/
+
+# Sitemap location
+Sitemap: https://techiguru.in/sitemap.xml

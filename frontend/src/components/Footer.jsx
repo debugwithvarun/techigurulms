@@ -1,45 +1,67 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 import {
-  MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin, Youtube,
-  Clock
-} from 'lucide-react';
-
+  MapPin,
+  Phone,
+  Mail,
+  Facebook,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Youtube,
+  Clock,
+} from "lucide-react";
+import mainlogo from "../assets/Tlogo.svg";
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const companyLinks = [
-    { label: 'About Us', href: '/about' },
-    { label: 'Careers', href: '/careers' },
-    { label: 'Contact Us', href: '/contact' },
-    { label: 'Investors', href: '/contact' },
-    { label: 'Teams', href: '/about' },
-    { label: 'Our Partners', href: '/contact' },
-    { label: 'Our Story', href: '/about' },
-    { label: 'Testimonials', href: '/about' },
+    { label: "About Us", href: "/about" },
+    { label: "Careers", href: "/careers" },
+    { label: "Contact Us", href: "/contact" },
+    { label: "Investors", href: "/contact" },
+    { label: "Teams", href: "/about" },
+    { label: "Our Partners", href: "/contact" },
+    { label: "Our Story", href: "/about" },
+    { label: "Testimonials", href: "/about" },
   ];
 
   const resourceLinks = [
-    { label: 'Technical Q&A', href: '/help-centre' },
-    { label: 'Blogs', href: '/blog' },
-    { label: 'Sitemap', href: '/' },
-    { label: 'Help Center', href: '/help-centre' },
-    { label: 'Terms Of Service', href: '/terms-conditions' },
-    { label: 'Career Path', href: '/active-course' },
-    { label: 'Privacy & Policy', href: '/privacy-policy' },
+    { label: "Technical Q&A", href: "/help-centre" },
+    { label: "Blogs", href: "/blog" },
+    { label: "Sitemap", href: "/" },
+    { label: "Help Center", href: "/help-centre" },
+    { label: "Terms Of Service", href: "/terms-conditions" },
+    { label: "Career Path", href: "/active-course" },
+    { label: "Privacy & Policy", href: "/privacy-policy" },
   ];
 
   const socialLinks = [
-    { icon: Facebook, href: 'https://www.facebook.com/techiguruIN/', label: 'Facebook' },
-    { icon: Instagram, href: 'https://www.instagram.com/techiguruIN/', label: 'Instagram' },
-    { icon: Twitter, href: '#', label: 'Twitter' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
-    { icon: Youtube, href: '#', label: 'YouTube' },
+    {
+      icon: Facebook,
+      href: "https://www.facebook.com/techiguru.in",
+      label: "Facebook",
+    },
+    {
+      icon: Instagram,
+      href: "https://www.instagram.com/techiguru.in",
+      label: "Instagram",
+    },
+    // { icon: Twitter, href: '#', label: 'Twitter' },
+    {
+      icon: Linkedin,
+      href: "https://www.linkedin.com/company/techiguru-in",
+      label: "LinkedIn",
+    },
+    {
+      icon: Youtube,
+      href: "https://www.youtube.com/@techiguru-in",
+      label: "YouTube",
+    },
   ];
 
   return (
     <footer className="bg-[#0F172A] text-slate-300 relative overflow-hidden font-sans">
-
       {/* Top Gradient Line */}
       <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-purple-600 via-blue-500 to-purple-600" />
 
@@ -49,22 +71,25 @@ const Footer = () => {
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20 pt-20 pb-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
-
           {/* ── Column 1: Brand & Contact ───────────────────────── */}
           <div className="space-y-6">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/50 shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                  <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                </svg>
+            <div className="flex items-center w-fit h-fit gap-1  group cursor-pointer">
+              <div className=" rounded-xl flex items-start justify-start">
+                <img
+                  src={mainlogo}
+                  alt="TechiGuru Logo"
+                  className="w-20 h-20 "
+                />
               </div>
-              <span className="text-2xl font-black text-white tracking-tight">TechiGuru</span>
+
+              <span className="text-2xl font-extrabold text-white tracking-tight group-hover:text-purple-400 transition">
+                TechiGuru
+              </span>
             </div>
 
             <p className="text-slate-400 leading-relaxed text-sm pr-4">
-              Empowering learners across India with cutting-edge technical skills, 
-              expert mentorship, and industry-recognized certifications. 
+              Empowering learners across India with cutting-edge technical
+              skills, expert mentorship, and industry-recognized certifications.
               Your career transformation starts here.
             </p>
 
@@ -72,14 +97,30 @@ const Footer = () => {
             <div className="space-y-3.5 pt-1">
               <div className="flex items-start gap-3 text-sm group">
                 <MapPin size={17} className="text-purple-500 mt-0.5 shrink-0" />
-                <span className="text-slate-400 leading-snug">Ghaziabad, 201009<br />Uttar Pradesh, India</span>
+                <span className="text-slate-400 leading-snug">
+                  Ghaziabad, 201009
+                  <br />
+                  Uttar Pradesh, India
+                </span>
               </div>
-              <a href="tel:+919368465315" className="flex items-center gap-3 text-sm group hover:text-white transition-colors">
-                <Phone size={17} className="text-purple-500 shrink-0 group-hover:text-purple-400 transition-colors" />
+              <a
+                href="tel:+919368465315"
+                className="flex items-center gap-3 text-sm group hover:text-white transition-colors"
+              >
+                <Phone
+                  size={17}
+                  className="text-purple-500 shrink-0 group-hover:text-purple-400 transition-colors"
+                />
                 <span>+91 9368465315</span>
               </a>
-              <a href="mailto:info@techhubtechnology.com" className="flex items-center gap-3 text-sm group hover:text-white transition-colors">
-                <Mail size={17} className="text-purple-500 shrink-0 group-hover:text-purple-400 transition-colors" />
+              <a
+                href="mailto:info@techhubtechnology.com"
+                className="flex items-center gap-3 text-sm group hover:text-white transition-colors"
+              >
+                <Mail
+                  size={17}
+                  className="text-purple-500 shrink-0 group-hover:text-purple-400 transition-colors"
+                />
                 <span className="break-all">info@generativeaix.com</span>
               </a>
               {/* <div className="flex items-start gap-3 text-sm">
@@ -107,7 +148,9 @@ const Footer = () => {
 
           {/* ── Column 2: Company ──────────────────────────────── */}
           <div>
-            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">Company</h3>
+            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">
+              Company
+            </h3>
             <ul className="space-y-2.5">
               {companyLinks.map(({ label, href }) => (
                 <li key={label}>
@@ -125,7 +168,9 @@ const Footer = () => {
 
           {/* ── Column 3: Resources ────────────────────────────── */}
           <div>
-            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">Resources</h3>
+            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">
+              Resources
+            </h3>
             <ul className="space-y-2.5">
               {resourceLinks.map(({ label, href }) => (
                 <li key={label}>
@@ -143,18 +188,24 @@ const Footer = () => {
 
           {/* ── Column 4: About / Quick Info ───────────────────── */}
           <div>
-            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">Why TechiGuru?</h3>
+            <h3 className="text-white font-bold text-base mb-6 uppercase tracking-wider">
+              Why TechiGuru?
+            </h3>
             <ul className="space-y-3">
               {[
-                { num: '15,000+', text: 'Active Students Enrolled' },
-                { num: '200+',   text: 'Expert Courses Available' },
-                { num: '98%',    text: 'Student Satisfaction Rate' },
-                { num: '500+',   text: 'Certificates Issued' },
-                { num: '100%',   text: 'Skill-Based Curriculum' },
+                { num: "15,000+", text: "Active Students Enrolled" },
+                { num: "200+", text: "Expert Courses Available" },
+                { num: "98%", text: "Student Satisfaction Rate" },
+                { num: "500+", text: "Certificates Issued" },
+                { num: "100%", text: "Skill-Based Curriculum" },
               ].map(({ num, text }) => (
                 <li key={text} className="flex items-start gap-3">
-                  <span className="text-purple-400 font-black text-sm shrink-0 min-w-[52px]">{num}</span>
-                  <span className="text-slate-400 text-sm leading-snug">{text}</span>
+                  <span className="text-purple-400 font-black text-sm shrink-0 min-w-[52px]">
+                    {num}
+                  </span>
+                  <span className="text-slate-400 text-sm leading-snug">
+                    {text}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -166,23 +217,38 @@ const Footer = () => {
               </a>
             </div> */}
           </div>
-
         </div>
 
         {/* ── Divider ────────────────────────────────────────────── */}
         <div className="border-t border-slate-800/80 mt-16 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
             <p className="text-slate-500 text-sm">
-              © {currentYear} <span className="text-slate-400 font-semibold">TechiGuru</span> | Techiguru Technology Pvt. Ltd. All rights reserved.
+              © {currentYear}{" "}
+              <span className="text-slate-400 font-semibold">TechiGuru</span> |
+              Techiguru Technology Pvt. Ltd. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
-              <Link to="/privacy-policy"   className="text-xs text-slate-500 hover:text-purple-400 transition-colors">Privacy Policy</Link>
-              <Link to="/terms-conditions" className="text-xs text-slate-500 hover:text-purple-400 transition-colors">Terms of Service</Link>
-              <Link to="/help-centre"      className="text-xs text-slate-500 hover:text-purple-400 transition-colors">Help Centre</Link>
+              <Link
+                to="/privacy-policy"
+                className="text-xs text-slate-500 hover:text-purple-400 transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                to="/terms-conditions"
+                className="text-xs text-slate-500 hover:text-purple-400 transition-colors"
+              >
+                Terms of Service
+              </Link>
+              <Link
+                to="/help-centre"
+                className="text-xs text-slate-500 hover:text-purple-400 transition-colors"
+              >
+                Help Centre
+              </Link>
             </div>
           </div>
         </div>
-
       </div>
     </footer>
   );

@@ -2,7 +2,9 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CourseProvider } from "./context/CourseContext";
-
+// import HrLogin from "./page/HRLogin"; 
+import SubHRLogin from "./page/SubHRLogin";
+import HrLogin from "./page/HRLogin";
 import Navbar from "./components/Navbar";
 import Home from "./components/Home";
 import Footer from "./components/Footer";
@@ -33,6 +35,7 @@ import BlogPage from "./page/BlogPage";
 
 // ── NEW: SSO redirect bridge page (no Navbar/Footer — standalone fullscreen)
 import SsoRedirectPage from "./page/SsoRedirectPage";
+import OurServicesPage from "./components/service/OurServicePage";
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
@@ -81,6 +84,8 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<Contact />} />
+            <Route path="/our-service" element={<OurServicesPage />} />
+
               <Route path="/active-course" element={<Active />} />
               <Route path="/inactive-course" element={<Inactive />} />
               <Route path="/active-certificates" element={<CertificatesPage />} />
@@ -100,7 +105,7 @@ function App() {
 
             {/* STANDALONE PAGES (no Navbar/Footer) */}
             <Route path="/course/:id/learn" element={<PrivateRoute><CourseDetail /></PrivateRoute>} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/login" element={<LoginPage />} /> 
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -121,6 +126,10 @@ function App() {
             <Route path="/hr-dashboard"    element={<PrivateRoute><HeadHrDashboard /></PrivateRoute>} />
 <Route path="/subhr-dashboard" element={<PrivateRoute><SubHRDashboard /></PrivateRoute>} />
 <Route path="/intern-dashboard" element={<PrivateRoute><InternDashboard /></PrivateRoute>} />
+<Route path="/hr-login"    element={<HrLogin />} />
+<Route path="/subhr-login" element={<SubHRLogin />} />
+
+
 
             {/* 404 */}
             <Route path="*" element={

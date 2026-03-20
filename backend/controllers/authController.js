@@ -1,14 +1,525 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+// const User = require('../models/User');
+// const jwt = require('jsonwebtoken');
+// const crypto = require('crypto');
+// const { generateOTP, sendOTPEmail } = require('../utlis/emailService');
+
+// const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
+
+// // Helper: Generate JWT
+// const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+
+// // ── Send Signup OTP ──────────────────────────────────────────────────────────
+// const sendSignupOTP = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+//     if (!email) return res.status(400).json({ message: 'Email is required' });
+
+//     const existing = await User.findOne({ email: email.toLowerCase(), isEmailVerified: true });
+//     if (existing) return res.status(400).json({ message: 'Account with this email already exists' });
+
+//     const otp = generateOTP();
+//     const expire = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+//     // Upsert a pending (unverified) user record to hold the OTP
+//     await User.findOneAndUpdate(
+//       { email: email.toLowerCase() },
+//       { emailOTP: otp, emailOTPExpire: expire, isEmailVerified: false },
+//       { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: false }
+//     );
+
+//     await sendOTPEmail(email, otp, 'signup');
+//     res.json({ message: 'OTP sent to your email. Valid for 10 minutes.' });
+//   } catch (error) {
+//     console.error('sendSignupOTP error:', error);
+//     res.status(500).json({ message: 'Failed to send OTP: ' + error.message });
+//   }
+// };
+
+// // ── Verify OTP & Register ─────────────────────────────────────────────────────
+// const verifyAndRegister = async (req, res) => {
+//   try {
+//     const { name, email, password, role, otp } = req.body;
+//     if (!name || !email || !password || !otp) {
+//       return res.status(400).json({ message: 'Please provide all required fields' });
+//     }
+
+//     // Load pending user with OTP fields
+//     const pending = await User.findOne({ email: email.toLowerCase() }).select('+emailOTP +emailOTPExpire');
+//     if (!pending) return res.status(400).json({ message: 'Please request an OTP first' });
+//     if (pending.isEmailVerified) return res.status(400).json({ message: 'Account already verified. Please login.' });
+//     if (!pending.emailOTP || pending.emailOTP !== otp) {
+//       return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
+//     }
+//     if (!pending.emailOTPExpire || pending.emailOTPExpire < Date.now()) {
+//       return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+//     }
+
+//     // Assign role/status
+//     let assignedRole = role || 'student';
+//     if (ADMIN_EMAILS.includes(email.toLowerCase())) assignedRole = 'admin';
+
+//     // Update pending user to a full verified account
+//     pending.name = name;
+//     pending.password = password;
+//     pending.role = assignedRole;
+//     pending.isEmailVerified = true;
+//     pending.emailOTP = undefined;
+//     pending.emailOTPExpire = undefined;
+//     pending.instructorStatus = ADMIN_EMAILS.includes(email.toLowerCase()) ? 'approved' : 'pending';
+//     await pending.save();
+
+//     const isPendingInstructor = assignedRole === 'instructor' && !ADMIN_EMAILS.includes(email.toLowerCase());
+
+//     res.status(201).json({
+//       ...pending.getPublicProfile(),
+//       token: generateToken(pending._id),
+//       pendingApproval: isPendingInstructor,
+//       message: isPendingInstructor
+//         ? 'Registration successful! Your instructor account is pending admin approval.'
+//         : 'Registration successful!',
+//     });
+//   } catch (error) {
+//     console.error('verifyAndRegister error:', error);
+//     res.status(500).json({ message: 'Server Error: ' + error.message });
+//   }
+// };
+
+// // ── Register (legacy — kept for backwards compatibility) ─────────────────────
+// const registerUser = async (req, res) => {
+//   try {
+//     const { name, email, password, role, bio, title } = req.body;
+//     if (!name || !email || !password) {
+//       return res.status(400).json({ message: 'Please provide name, email and password' });
+//     }
+
+//     const userExists = await User.findOne({ email: email.toLowerCase(), isEmailVerified: true });
+//     if (userExists) return res.status(400).json({ message: 'Account with this email already exists' });
+
+//     let assignedRole = role || 'student';
+//     if (ADMIN_EMAILS.includes(email.toLowerCase())) assignedRole = 'admin';
+
+//     const user = await User.create({
+//       name, email, password,
+//       role: assignedRole,
+//       bio: bio || '',
+//       title: title || '',
+//       isEmailVerified: true, // Legacy route skips OTP
+//       instructorStatus: ADMIN_EMAILS.includes(email.toLowerCase()) ? 'approved' : 'pending',
+//     });
+
+//     if (!user) return res.status(400).json({ message: 'Invalid user data' });
+
+//     const isPendingInstructor = assignedRole === 'instructor' && !ADMIN_EMAILS.includes(email.toLowerCase());
+
+//     res.status(201).json({
+//       ...user.getPublicProfile(),
+//       token: generateToken(user._id),
+//       pendingApproval: isPendingInstructor,
+//       message: isPendingInstructor
+//         ? 'Registration successful! Your instructor account is pending admin approval.'
+//         : 'Registration successful!',
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Server Error: ' + error.message });
+//   }
+// };
+
+// // ── Login ─────────────────────────────────────────────────────────────────────
+// const loginUser = async (req, res) => {
+//   try {
+//     const { email, password, loginAs } = req.body;
+//     if (!email || !password) return res.status(400).json({ message: 'Please provide email and password' });
+
+//     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+//     if (!user || !(await user.matchPassword(password))) {
+//       return res.status(401).json({ message: 'Invalid email or password' });
+//     }
+
+//     // Block unverified accounts (only if they came through the OTP flow)
+//     if (!user.isEmailVerified && user.name) {
+//       return res.status(401).json({ message: 'Please verify your email before logging in.' });
+//     }
+
+//     // ── Role mismatch check ────────────────────────────────────────────────────
+//     if (loginAs === 'student' && (user.role === 'instructor' || user.role === 'admin')) {
+//       return res.status(403).json({
+//         message: `This account is registered as an ${user.role}. Please use the ${user.role === 'admin' ? 'Admin' : 'Instructor'} login.`
+//       });
+//     }
+//     if (loginAs === 'instructor' && user.role !== 'instructor' && user.role !== 'admin') {
+//       return res.status(403).json({
+//         message: 'This account is registered as a student. Please use the Student login.'
+//       });
+//     }
+
+//     user.lastLogin = new Date();
+//     await user.save({ validateModifiedOnly: true });
+
+//     res.json({
+//       ...user.getPublicProfile(),
+//       token: generateToken(user._id),
+//       pendingApproval: user.role === 'instructor' && user.instructorStatus === 'pending',
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Server Error' });
+//   }
+// };
+
+
+// // ── Forgot Password — Send OTP ────────────────────────────────────────────────
+// const forgotPassword = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+//     if (!email) return res.status(400).json({ message: 'Email is required' });
+
+//     const user = await User.findOne({ email: email.toLowerCase() });
+//     if (!user || !user.isEmailVerified) {
+//       // Return success anyway to prevent email enumeration
+//       return res.json({ message: 'If an account with this email exists, a reset OTP has been sent.' });
+//     }
+
+//     const otp = generateOTP();
+//     user.emailOTP = otp;
+//     user.emailOTPExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+//     await user.save({ validateModifiedOnly: true });
+
+//     await sendOTPEmail(email, otp, 'forgot');
+//     res.json({ message: 'Password reset OTP sent to your email. Valid for 10 minutes.' });
+//   } catch (error) {
+//     console.error('forgotPassword error:', error);
+//     res.status(500).json({ message: 'Failed to send reset OTP: ' + error.message });
+//   }
+// };
+
+// // ── Reset Password with OTP ───────────────────────────────────────────────────
+// const resetPasswordWithOTP = async (req, res) => {
+//   try {
+//     const { email, otp, newPassword } = req.body;
+//     if (!email || !otp || !newPassword) {
+//       return res.status(400).json({ message: 'Email, OTP, and new password are required' });
+//     }
+//     if (newPassword.length < 6) {
+//       return res.status(400).json({ message: 'Password must be at least 6 characters' });
+//     }
+
+//     const user = await User.findOne({ email: email.toLowerCase() }).select('+emailOTP +emailOTPExpire');
+//     if (!user) return res.status(400).json({ message: 'No account found with this email' });
+
+//     if (!user.emailOTP || user.emailOTP !== otp) {
+//       return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
+//     }
+//     if (!user.emailOTPExpire || user.emailOTPExpire < Date.now()) {
+//       return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+//     }
+
+//     user.password = newPassword;
+//     user.emailOTP = undefined;
+//     user.emailOTPExpire = undefined;
+//     await user.save({ validateModifiedOnly: true });
+
+//     res.json({ message: 'Password reset successful! You can now login with your new password.' });
+//   } catch (error) {
+//     console.error('resetPasswordWithOTP error:', error);
+//     res.status(500).json({ message: 'Server Error: ' + error.message });
+//   }
+// };
+
+// // ── Get current user ──────────────────────────────────────────────────────────
+// const getMe = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id)
+//       .populate('earnedCertificates.course', 'title thumbnail category');
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+//     res.status(200).json(user.getPublicProfile());
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server Error' });
+//   }
+// };
+
+// // ── Update Profile ────────────────────────────────────────────────────────────
+// const updateUserProfile = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id);
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+
+//     const { name, email, bio, title, avatar, instructorBio, expertise, socialLinks } = req.body;
+//     if (name) user.name = name;
+//     if (email) user.email = email;
+//     if (bio !== undefined) user.bio = bio;
+//     if (title !== undefined) user.title = title;
+//     if (avatar !== undefined) user.avatar = avatar;
+//     if (instructorBio !== undefined) user.instructorBio = instructorBio;
+//     if (expertise !== undefined) user.expertise = expertise;
+//     if (socialLinks !== undefined) user.socialLinks = { ...user.socialLinks, ...socialLinks };
+//     if (req.body.password) user.password = req.body.password;
+
+//     const updated = await user.save({ validateModifiedOnly: true });
+
+//     res.json({
+//       ...updated.getPublicProfile(),
+//       token: generateToken(updated._id),
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// // ── Get My Enrolled Courses with Progress ─────────────────────────────────────
+// const getMyEnrollments = async (req, res) => {
+//   try {
+//     const Course = require('../models/Course');
+//     const courses = await Course.find({
+//       'enrollments.student': req.user._id,
+//       approvalStatus: 'approved',
+//     })
+//       .populate('instructor', 'name avatar title instructorBio')
+//       .select('title thumbnail description category level sections studentsEnrolled rating price enrollments slug');
+
+//     const withProgress = courses.map(c => {
+//       const enrollment = c.enrollments.find(e => e.student.toString() === req.user._id.toString());
+//       return {
+//         _id: c._id,
+//         title: c.title,
+//         thumbnail: c.thumbnail,
+//         description: c.description,
+//         category: c.category,
+//         level: c.level,
+//         studentsEnrolled: c.studentsEnrolled,
+//         rating: c.rating,
+//         price: c.price,
+//         instructor: c.instructor,
+//         totalLessons: c.sections?.reduce((a, s) => a + (s.lessons?.length || 0), 0) || 0,
+//         progress: enrollment?.progress || 0,
+//         completed: enrollment?.completed || false,
+//         enrolledAt: enrollment?.enrolledAt,
+//       };
+//     });
+
+//     res.json(withProgress);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server Error: ' + error.message });
+//   }
+// };
+
+// // ── Get Public Instructor Profile ──────────────────────────────────────────────
+// const getPublicProfile = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.params.id)
+//       .select('name avatar bio title instructorBio expertise socialLinks totalStudents totalCourses role');
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+//     res.json(user);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server Error' });
+//   }
+// };
+
+// // ── Upload Avatar ──────────────────────────────────────────────────────────────
+// const uploadAvatar = async (req, res) => {
+//   try {
+//     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+//     const user = await User.findById(req.user._id);
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+
+//     // Delete old avatar from disk if it's a local file
+//     if (user.avatar && (user.avatar.startsWith('/uploads') || user.avatar.startsWith('\\uploads'))) {
+//       const fs = require('fs');
+//       const oldPath = require('path').join(__dirname, '..', user.avatar.replace(/\\/g, '/'));
+//       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+//     }
+
+//     const relativePath = `/uploads/avatars/${req.file.filename}`;
+//     user.avatar = relativePath;
+//     await user.save({ validateModifiedOnly: true });
+
+//     res.json({ avatar: relativePath, message: 'Avatar updated successfully' });
+//   } catch (error) {
+//     console.error('Avatar upload error:', error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// // ── Send Verify-Account OTP (for unverified users who can't log in) ────────────
+// const sendVerifyAccountOTP = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+//     if (!email) return res.status(400).json({ message: 'Email is required' });
+
+//     const user = await User.findOne({ email: email.toLowerCase() }).select('+emailOTP +emailOTPExpire');
+//     if (!user) return res.status(400).json({ message: 'No account found with this email.' });
+//     if (user.isEmailVerified) return res.status(400).json({ message: 'This account is already verified. Please log in.' });
+
+//     const otp = generateOTP();
+//     user.emailOTP = otp;
+//     user.emailOTPExpire = new Date(Date.now() + 10 * 60 * 1000);
+//     await user.save({ validateModifiedOnly: true });
+
+//     await sendOTPEmail(email, otp, 'verify');
+//     res.json({ message: 'Verification OTP sent to your email. Valid for 10 minutes.' });
+//   } catch (error) {
+//     console.error('sendVerifyAccountOTP error:', error);
+//     res.status(500).json({ message: 'Failed to send OTP: ' + error.message });
+//   }
+// };
+
+// // ── Verify Account with OTP (manual verify flow) ──────────────────────────────
+// const verifyAccountWithOTP = async (req, res) => {
+//   try {
+//     const { email, otp } = req.body;
+//     if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
+
+//     const user = await User.findOne({ email: email.toLowerCase() }).select('+emailOTP +emailOTPExpire');
+//     if (!user) return res.status(400).json({ message: 'No account found with this email.' });
+//     if (user.isEmailVerified) return res.status(400).json({ message: 'Account is already verified.' });
+//     if (!user.emailOTP || user.emailOTP !== otp) return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
+//     if (!user.emailOTPExpire || user.emailOTPExpire < Date.now()) return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+
+//     user.isEmailVerified = true;
+//     user.emailOTP = undefined;
+//     user.emailOTPExpire = undefined;
+//     await user.save({ validateModifiedOnly: true });
+
+//     res.json({ message: 'Account verified successfully! You can now log in.' });
+//   } catch (error) {
+//     console.error('verifyAccountWithOTP error:', error);
+//     res.status(500).json({ message: 'Server Error: ' + error.message });
+//   }
+// };
+
+// // ── Verify email via admin token link ────────────────────────────────────────
+// const verifyEmailByToken = async (req, res) => {
+//   try {
+//     const { token } = req.query;
+//     if (!token) return res.status(400).json({ message: 'Verification token is required' });
+
+//     // Hash the incoming token to compare with stored hash
+//     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+//     const user = await User.findOne({
+//       verifyToken: hashedToken,
+//       verifyTokenExpire: { $gt: Date.now() },
+//     }).select('+verifyToken +verifyTokenExpire');
+
+//     if (!user) {
+//       // Friendly redirect to frontend with error
+//       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?status=invalid`);
+//     }
+
+//     user.isEmailVerified = true;
+//     user.verifyToken = undefined;
+//     user.verifyTokenExpire = undefined;
+//     await user.save({ validateModifiedOnly: true });
+
+//     // Redirect to frontend success page
+//     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?status=success`);
+//   } catch (error) {
+//     console.error('verifyEmailByToken error:', error);
+//     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?status=error`);
+//   }
+// };
+
+// // ── Generate SSO Token (for AI Interview cross-app login) ─────────────────────
+// // GET /api/auth/sso-token  (protected)
+// const generateSSOToken = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id).select('+ssoToken +ssoTokenExpire');
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+
+//     // 1. Generate a cryptographically random 32-byte raw token
+//     const rawToken = crypto.randomBytes(32).toString('hex');
+
+//     // 2. Store SHA-256 hash of rawToken in DB (never store raw token in DB)
+//     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+//     user.ssoToken = hashedToken;
+//     user.ssoTokenExpire = new Date(Date.now() + 5 * 60 * 1000); // 5-minute window
+//     await user.save({ validateModifiedOnly: true });
+
+//     // 3. AES-256-CBC encrypt the rawToken before sending it in the URL
+//     //    SSO_ENCRYPTION_KEY must be 32 chars (256 bits). Shared with Flask app.
+//     const ssoKey = (process.env.SSO_ENCRYPTION_KEY || 'techiguru-sso-secret-key-32bytes').padEnd(32).slice(0, 32);
+//     const iv = crypto.randomBytes(16); // fresh random IV per token
+//     const key = Buffer.from(ssoKey, 'utf8');
+
+//     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+//     let encrypted = cipher.update(rawToken, 'utf8', 'base64');
+//     encrypted += cipher.final('base64');
+
+//     // Pack iv + ciphertext into a single URL-safe base64 string
+//     const encryptedToken = Buffer.concat([
+//       iv,
+//       Buffer.from(encrypted, 'base64'),
+//     ]).toString('base64url');
+
+//     res.json({ ssoToken: encryptedToken });
+//   } catch (error) {
+//     console.error('generateSSOToken error:', error);
+//     res.status(500).json({ message: 'Server Error' });
+//   }
+// };
+
+// // ── Validate SSO Token (called by Flask AI Interview app) ─────────────────────
+// // POST /api/auth/validate-sso  (public — called server-to-server by Flask)
+// const validateSSOToken = async (req, res) => {
+//   try {
+//     const { token } = req.body;
+//     if (!token) return res.status(400).json({ message: 'Token is required' });
+
+//     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+//     const user = await User.findOne({
+//       ssoToken: hashedToken,
+//       ssoTokenExpire: { $gt: Date.now() },
+//     }).select('+ssoToken +ssoTokenExpire');
+
+//     if (!user) {
+//       return res.status(401).json({ message: 'Invalid or expired SSO token' });
+//     }
+
+//     // Invalidate token after first use (one-time use)
+//     user.ssoToken = undefined;
+//     user.ssoTokenExpire = undefined;
+//     await user.save({ validateModifiedOnly: true });
+
+//     res.json({
+//       valid: true,
+//       user: {
+//         _id: user._id,
+//         name: user.name,
+//         email: user.email,
+//         role: user.role,
+//         token: generateToken(user._id),   // Main JWT for score submission
+//       }
+//     });
+//   } catch (error) {
+//     console.error('validateSSOToken error:', error);
+//     res.status(500).json({ message: 'Server Error' });
+//   }
+// };
+
+// module.exports = {
+//   registerUser, loginUser, getMe, updateUserProfile,
+//   getMyEnrollments, getPublicProfile, uploadAvatar,
+//   sendSignupOTP, verifyAndRegister,
+//   forgotPassword, resetPasswordWithOTP,
+//   sendVerifyAccountOTP, verifyAccountWithOTP, verifyEmailByToken,
+//   generateSSOToken, validateSSOToken,
+// };
+
+
+const User   = require('../models/User');
+const jwt    = require('jsonwebtoken');
 const crypto = require('crypto');
 const { generateOTP, sendOTPEmail } = require('../utlis/emailService');
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
-// Helper: Generate JWT
-const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+// ── Generate JWT ───────────────────────────────────────────────────────────────
+const generateToken = (id) =>
+  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
-// ── Send Signup OTP ──────────────────────────────────────────────────────────
+// ── Send Signup OTP ────────────────────────────────────────────────────────────
 const sendSignupOTP = async (req, res) => {
   try {
     const { email } = req.body;
@@ -17,10 +528,9 @@ const sendSignupOTP = async (req, res) => {
     const existing = await User.findOne({ email: email.toLowerCase(), isEmailVerified: true });
     if (existing) return res.status(400).json({ message: 'Account with this email already exists' });
 
-    const otp = generateOTP();
-    const expire = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otp    = generateOTP();
+    const expire = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Upsert a pending (unverified) user record to hold the OTP
     await User.findOneAndUpdate(
       { email: email.toLowerCase() },
       { emailOTP: otp, emailOTPExpire: expire, isEmailVerified: false },
@@ -35,7 +545,7 @@ const sendSignupOTP = async (req, res) => {
   }
 };
 
-// ── Verify OTP & Register ─────────────────────────────────────────────────────
+// ── Verify OTP & Register ──────────────────────────────────────────────────────
 const verifyAndRegister = async (req, res) => {
   try {
     const { name, email, password, role, otp } = req.body;
@@ -43,9 +553,9 @@ const verifyAndRegister = async (req, res) => {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
-    // Load pending user with OTP fields
-    const pending = await User.findOne({ email: email.toLowerCase() }).select('+emailOTP +emailOTPExpire');
-    if (!pending) return res.status(400).json({ message: 'Please request an OTP first' });
+    const pending = await User.findOne({ email: email.toLowerCase() })
+      .select('+emailOTP +emailOTPExpire');
+    if (!pending)               return res.status(400).json({ message: 'Please request an OTP first' });
     if (pending.isEmailVerified) return res.status(400).json({ message: 'Account already verified. Please login.' });
     if (!pending.emailOTP || pending.emailOTP !== otp) {
       return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
@@ -54,17 +564,17 @@ const verifyAndRegister = async (req, res) => {
       return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
     }
 
-    // Assign role/status
-    let assignedRole = role || 'student';
+    // Only student / instructor allowed via public signup
+    // headhr / subhr / intern are created by admin only
+    let assignedRole = ['student', 'instructor'].includes(role) ? role : 'student';
     if (ADMIN_EMAILS.includes(email.toLowerCase())) assignedRole = 'admin';
 
-    // Update pending user to a full verified account
-    pending.name = name;
-    pending.password = password;
-    pending.role = assignedRole;
-    pending.isEmailVerified = true;
-    pending.emailOTP = undefined;
-    pending.emailOTPExpire = undefined;
+    pending.name             = name;
+    pending.password         = password;
+    pending.role             = assignedRole;
+    pending.isEmailVerified  = true;
+    pending.emailOTP         = undefined;
+    pending.emailOTPExpire   = undefined;
     pending.instructorStatus = ADMIN_EMAILS.includes(email.toLowerCase()) ? 'approved' : 'pending';
     await pending.save();
 
@@ -84,7 +594,7 @@ const verifyAndRegister = async (req, res) => {
   }
 };
 
-// ── Register (legacy — kept for backwards compatibility) ─────────────────────
+// ── Register (legacy — kept for backwards compatibility) ──────────────────────
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, role, bio, title } = req.body;
@@ -95,15 +605,15 @@ const registerUser = async (req, res) => {
     const userExists = await User.findOne({ email: email.toLowerCase(), isEmailVerified: true });
     if (userExists) return res.status(400).json({ message: 'Account with this email already exists' });
 
-    let assignedRole = role || 'student';
+    let assignedRole = ['student', 'instructor'].includes(role) ? role : 'student';
     if (ADMIN_EMAILS.includes(email.toLowerCase())) assignedRole = 'admin';
 
     const user = await User.create({
       name, email, password,
       role: assignedRole,
-      bio: bio || '',
+      bio:  bio   || '',
       title: title || '',
-      isEmailVerified: true, // Legacy route skips OTP
+      isEmailVerified: true,
       instructorStatus: ADMIN_EMAILS.includes(email.toLowerCase()) ? 'approved' : 'pending',
     });
 
@@ -125,32 +635,45 @@ const registerUser = async (req, res) => {
   }
 };
 
-// ── Login ─────────────────────────────────────────────────────────────────────
+// ── Login ──────────────────────────────────────────────────────────────────────
+// UPDATED: now supports headhr / subhr / intern login on the same endpoint.
+// The loginAs field still guards student vs instructor portals.
+// HR portals (/hr-login, /subhr-login) don't send loginAs — they let any role through
+// and the frontend checks the returned role.
 const loginUser = async (req, res) => {
   try {
     const { email, password, loginAs } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'Please provide email and password' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
 
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Block unverified accounts (only if they came through the OTP flow)
+    // Block unverified accounts (only for OTP-registered users)
     if (!user.isEmailVerified && user.name) {
       return res.status(401).json({ message: 'Please verify your email before logging in.' });
     }
 
-    // ── Role mismatch check ────────────────────────────────────────────────────
-    if (loginAs === 'student' && (user.role === 'instructor' || user.role === 'admin')) {
-      return res.status(403).json({
-        message: `This account is registered as an ${user.role}. Please use the ${user.role === 'admin' ? 'Admin' : 'Instructor'} login.`
-      });
+    // ── Role mismatch checks (only when loginAs is specified) ─────────────────
+    // HR roles (headhr, subhr, intern) never send loginAs so these checks are skipped
+    if (loginAs === 'student') {
+      if (['instructor', 'admin'].includes(user.role)) {
+        return res.status(403).json({
+          message: `This account is registered as an ${user.role}. Please use the ${user.role === 'admin' ? 'Admin' : 'Instructor'} login.`
+        });
+      }
+      // Allow intern role to log in as student portal (they may still browse)
     }
-    if (loginAs === 'instructor' && user.role !== 'instructor' && user.role !== 'admin') {
-      return res.status(403).json({
-        message: 'This account is registered as a student. Please use the Student login.'
-      });
+
+    if (loginAs === 'instructor') {
+      if (!['instructor', 'admin'].includes(user.role)) {
+        return res.status(403).json({
+          message: 'This account is not an instructor account. Please use the Student login.'
+        });
+      }
     }
 
     user.lastLogin = new Date();
@@ -167,8 +690,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-
-// ── Forgot Password — Send OTP ────────────────────────────────────────────────
+// ── Forgot Password — Send OTP ─────────────────────────────────────────────────
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -176,13 +698,12 @@ const forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user || !user.isEmailVerified) {
-      // Return success anyway to prevent email enumeration
       return res.json({ message: 'If an account with this email exists, a reset OTP has been sent.' });
     }
 
     const otp = generateOTP();
-    user.emailOTP = otp;
-    user.emailOTPExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    user.emailOTP       = otp;
+    user.emailOTPExpire = new Date(Date.now() + 10 * 60 * 1000);
     await user.save({ validateModifiedOnly: true });
 
     await sendOTPEmail(email, otp, 'forgot');
@@ -193,7 +714,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// ── Reset Password with OTP ───────────────────────────────────────────────────
+// ── Reset Password with OTP ────────────────────────────────────────────────────
 const resetPasswordWithOTP = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -204,7 +725,8 @@ const resetPasswordWithOTP = async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+emailOTP +emailOTPExpire');
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select('+emailOTP +emailOTPExpire');
     if (!user) return res.status(400).json({ message: 'No account found with this email' });
 
     if (!user.emailOTP || user.emailOTP !== otp) {
@@ -214,8 +736,8 @@ const resetPasswordWithOTP = async (req, res) => {
       return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
     }
 
-    user.password = newPassword;
-    user.emailOTP = undefined;
+    user.password       = newPassword;
+    user.emailOTP       = undefined;
     user.emailOTPExpire = undefined;
     await user.save({ validateModifiedOnly: true });
 
@@ -226,7 +748,7 @@ const resetPasswordWithOTP = async (req, res) => {
   }
 };
 
-// ── Get current user ──────────────────────────────────────────────────────────
+// ── Get current user ───────────────────────────────────────────────────────────
 const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
@@ -238,35 +760,31 @@ const getMe = async (req, res) => {
   }
 };
 
-// ── Update Profile ────────────────────────────────────────────────────────────
+// ── Update Profile ─────────────────────────────────────────────────────────────
 const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const { name, email, bio, title, avatar, instructorBio, expertise, socialLinks } = req.body;
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (bio !== undefined) user.bio = bio;
-    if (title !== undefined) user.title = title;
-    if (avatar !== undefined) user.avatar = avatar;
-    if (instructorBio !== undefined) user.instructorBio = instructorBio;
-    if (expertise !== undefined) user.expertise = expertise;
-    if (socialLinks !== undefined) user.socialLinks = { ...user.socialLinks, ...socialLinks };
-    if (req.body.password) user.password = req.body.password;
+    if (name           !== undefined) user.name           = name;
+    if (email          !== undefined) user.email          = email;
+    if (bio            !== undefined) user.bio            = bio;
+    if (title          !== undefined) user.title          = title;
+    if (avatar         !== undefined) user.avatar         = avatar;
+    if (instructorBio  !== undefined) user.instructorBio  = instructorBio;
+    if (expertise      !== undefined) user.expertise      = expertise;
+    if (socialLinks    !== undefined) user.socialLinks    = { ...user.socialLinks, ...socialLinks };
+    if (req.body.password)            user.password       = req.body.password;
 
     const updated = await user.save({ validateModifiedOnly: true });
-
-    res.json({
-      ...updated.getPublicProfile(),
-      token: generateToken(updated._id),
-    });
+    res.json({ ...updated.getPublicProfile(), token: generateToken(updated._id) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// ── Get My Enrolled Courses with Progress ─────────────────────────────────────
+// ── Get My Enrolled Courses with Progress ──────────────────────────────────────
 const getMyEnrollments = async (req, res) => {
   try {
     const Course = require('../models/Course');
@@ -280,20 +798,20 @@ const getMyEnrollments = async (req, res) => {
     const withProgress = courses.map(c => {
       const enrollment = c.enrollments.find(e => e.student.toString() === req.user._id.toString());
       return {
-        _id: c._id,
-        title: c.title,
-        thumbnail: c.thumbnail,
-        description: c.description,
-        category: c.category,
-        level: c.level,
+        _id:            c._id,
+        title:          c.title,
+        thumbnail:      c.thumbnail,
+        description:    c.description,
+        category:       c.category,
+        level:          c.level,
         studentsEnrolled: c.studentsEnrolled,
-        rating: c.rating,
-        price: c.price,
-        instructor: c.instructor,
-        totalLessons: c.sections?.reduce((a, s) => a + (s.lessons?.length || 0), 0) || 0,
-        progress: enrollment?.progress || 0,
-        completed: enrollment?.completed || false,
-        enrolledAt: enrollment?.enrolledAt,
+        rating:         c.rating,
+        price:          c.price,
+        instructor:     c.instructor,
+        totalLessons:   c.sections?.reduce((a, s) => a + (s.lessons?.length || 0), 0) || 0,
+        progress:       enrollment?.progress  || 0,
+        completed:      enrollment?.completed || false,
+        enrolledAt:     enrollment?.enrolledAt,
       };
     });
 
@@ -323,10 +841,10 @@ const uploadAvatar = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Delete old avatar from disk if it's a local file
     if (user.avatar && (user.avatar.startsWith('/uploads') || user.avatar.startsWith('\\uploads'))) {
-      const fs = require('fs');
-      const oldPath = require('path').join(__dirname, '..', user.avatar.replace(/\\/g, '/'));
+      const fs   = require('fs');
+      const path = require('path');
+      const oldPath = path.join(__dirname, '..', user.avatar.replace(/\\/g, '/'));
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
 
@@ -341,18 +859,19 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
-// ── Send Verify-Account OTP (for unverified users who can't log in) ────────────
+// ── Send Verify-Account OTP ────────────────────────────────────────────────────
 const sendVerifyAccountOTP = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: 'Email is required' });
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+emailOTP +emailOTPExpire');
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select('+emailOTP +emailOTPExpire');
     if (!user) return res.status(400).json({ message: 'No account found with this email.' });
     if (user.isEmailVerified) return res.status(400).json({ message: 'This account is already verified. Please log in.' });
 
     const otp = generateOTP();
-    user.emailOTP = otp;
+    user.emailOTP       = otp;
     user.emailOTPExpire = new Date(Date.now() + 10 * 60 * 1000);
     await user.save({ validateModifiedOnly: true });
 
@@ -364,21 +883,26 @@ const sendVerifyAccountOTP = async (req, res) => {
   }
 };
 
-// ── Verify Account with OTP (manual verify flow) ──────────────────────────────
+// ── Verify Account with OTP ────────────────────────────────────────────────────
 const verifyAccountWithOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
     if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
 
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+emailOTP +emailOTPExpire');
-    if (!user) return res.status(400).json({ message: 'No account found with this email.' });
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select('+emailOTP +emailOTPExpire');
+    if (!user)               return res.status(400).json({ message: 'No account found with this email.' });
     if (user.isEmailVerified) return res.status(400).json({ message: 'Account is already verified.' });
-    if (!user.emailOTP || user.emailOTP !== otp) return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
-    if (!user.emailOTPExpire || user.emailOTPExpire < Date.now()) return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    if (!user.emailOTP || user.emailOTP !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
+    }
+    if (!user.emailOTPExpire || user.emailOTPExpire < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    }
 
     user.isEmailVerified = true;
-    user.emailOTP = undefined;
-    user.emailOTPExpire = undefined;
+    user.emailOTP        = undefined;
+    user.emailOTPExpire  = undefined;
     await user.save({ validateModifiedOnly: true });
 
     res.json({ message: 'Account verified successfully! You can now log in.' });
@@ -388,31 +912,28 @@ const verifyAccountWithOTP = async (req, res) => {
   }
 };
 
-// ── Verify email via admin token link ────────────────────────────────────────
+// ── Verify email via admin token link ──────────────────────────────────────────
 const verifyEmailByToken = async (req, res) => {
   try {
     const { token } = req.query;
     if (!token) return res.status(400).json({ message: 'Verification token is required' });
 
-    // Hash the incoming token to compare with stored hash
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
-      verifyToken: hashedToken,
+      verifyToken:       hashedToken,
       verifyTokenExpire: { $gt: Date.now() },
     }).select('+verifyToken +verifyTokenExpire');
 
     if (!user) {
-      // Friendly redirect to frontend with error
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?status=invalid`);
     }
 
-    user.isEmailVerified = true;
-    user.verifyToken = undefined;
+    user.isEmailVerified  = true;
+    user.verifyToken       = undefined;
     user.verifyTokenExpire = undefined;
     await user.save({ validateModifiedOnly: true });
 
-    // Redirect to frontend success page
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?status=success`);
   } catch (error) {
     console.error('verifyEmailByToken error:', error);
@@ -420,33 +941,27 @@ const verifyEmailByToken = async (req, res) => {
   }
 };
 
-// ── Generate SSO Token (for AI Interview cross-app login) ─────────────────────
-// GET /api/auth/sso-token  (protected)
+// ── Generate SSO Token ─────────────────────────────────────────────────────────
 const generateSSOToken = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('+ssoToken +ssoTokenExpire');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // 1. Generate a cryptographically random 32-byte raw token
-    const rawToken = crypto.randomBytes(32).toString('hex');
-
-    // 2. Store SHA-256 hash of rawToken in DB (never store raw token in DB)
+    const rawToken    = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-    user.ssoToken = hashedToken;
-    user.ssoTokenExpire = new Date(Date.now() + 5 * 60 * 1000); // 5-minute window
+
+    user.ssoToken       = hashedToken;
+    user.ssoTokenExpire = new Date(Date.now() + 5 * 60 * 1000);
     await user.save({ validateModifiedOnly: true });
 
-    // 3. AES-256-CBC encrypt the rawToken before sending it in the URL
-    //    SSO_ENCRYPTION_KEY must be 32 chars (256 bits). Shared with Flask app.
     const ssoKey = (process.env.SSO_ENCRYPTION_KEY || 'techiguru-sso-secret-key-32bytes').padEnd(32).slice(0, 32);
-    const iv = crypto.randomBytes(16); // fresh random IV per token
-    const key = Buffer.from(ssoKey, 'utf8');
+    const iv     = crypto.randomBytes(16);
+    const key    = Buffer.from(ssoKey, 'utf8');
 
-    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-    let encrypted = cipher.update(rawToken, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
+    const cipher    = crypto.createCipheriv('aes-256-cbc', key, iv);
+    let encrypted   = cipher.update(rawToken, 'utf8', 'base64');
+    encrypted      += cipher.final('base64');
 
-    // Pack iv + ciphertext into a single URL-safe base64 string
     const encryptedToken = Buffer.concat([
       iv,
       Buffer.from(encrypted, 'base64'),
@@ -460,7 +975,6 @@ const generateSSOToken = async (req, res) => {
 };
 
 // ── Validate SSO Token (called by Flask AI Interview app) ─────────────────────
-// POST /api/auth/validate-sso  (public — called server-to-server by Flask)
 const validateSSOToken = async (req, res) => {
   try {
     const { token } = req.body;
@@ -469,7 +983,7 @@ const validateSSOToken = async (req, res) => {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
-      ssoToken: hashedToken,
+      ssoToken:       hashedToken,
       ssoTokenExpire: { $gt: Date.now() },
     }).select('+ssoToken +ssoTokenExpire');
 
@@ -477,19 +991,18 @@ const validateSSOToken = async (req, res) => {
       return res.status(401).json({ message: 'Invalid or expired SSO token' });
     }
 
-    // Invalidate token after first use (one-time use)
-    user.ssoToken = undefined;
+    user.ssoToken       = undefined;
     user.ssoTokenExpire = undefined;
     await user.save({ validateModifiedOnly: true });
 
     res.json({
       valid: true,
       user: {
-        _id: user._id,
-        name: user.name,
+        _id:   user._id,
+        name:  user.name,
         email: user.email,
-        role: user.role,
-        token: generateToken(user._id),   // Main JWT for score submission
+        role:  user.role,
+        token: generateToken(user._id),
       }
     });
   } catch (error) {
@@ -499,10 +1012,20 @@ const validateSSOToken = async (req, res) => {
 };
 
 module.exports = {
-  registerUser, loginUser, getMe, updateUserProfile,
-  getMyEnrollments, getPublicProfile, uploadAvatar,
-  sendSignupOTP, verifyAndRegister,
-  forgotPassword, resetPasswordWithOTP,
-  sendVerifyAccountOTP, verifyAccountWithOTP, verifyEmailByToken,
-  generateSSOToken, validateSSOToken,
+  registerUser,
+  loginUser,
+  getMe,
+  updateUserProfile,
+  getMyEnrollments,
+  getPublicProfile,
+  uploadAvatar,
+  sendSignupOTP,
+  verifyAndRegister,
+  forgotPassword,
+  resetPasswordWithOTP,
+  sendVerifyAccountOTP,
+  verifyAccountWithOTP,
+  verifyEmailByToken,
+  generateSSOToken,
+  validateSSOToken,
 };

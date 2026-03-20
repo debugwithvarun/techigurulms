@@ -28,18 +28,20 @@ const BASE_NAV_LINKS = [
       { title: 'Archived Certificates', path: '/inactive-certificates', icon: <PauseCircle size={16}/> }
     ] 
   },
-  {
-    name: 'Our Service',
-    hasDropdown: true,
-    dropdownItems: [
-      { 
-        title: 'AI Mock Interview', 
-        path: 'https://imshopper-aimockinterview.hf.space', 
-        isExternal: true, 
-        icon: <PlayCircle size={16}/> 
-      },
-    ]
-  },
+  { name: 'Our Service', path: '/our-service', hasDropdown: false },
+
+  // {
+  //   name: 'Our Service',
+  //   hasDropdown: true,
+  //   dropdownItems: [
+  //     { 
+  //       title: 'AI Mock Interview', 
+  //       path: 'https://imshopper-aimockinterview.hf.space', 
+  //       isExternal: true, 
+  //       icon: <PlayCircle size={16}/> 
+  //     },
+  //   ]
+  // },
   { name: 'About', path: '/about', hasDropdown: false },
   // ── Contact now has two sub-options ───────────────────────────────────────
   {
@@ -190,7 +192,7 @@ const Navbar = () => {
 
   const profileItems = ROLE_PROFILE_ITEMS[user?.role] || [];
 
-  const hideNavbarPaths = ['/login', '/signup', '/sso-redirect'];
+  const hideNavbarPaths = ['/login', '/signup', '/sso-redirect', '/hr-login', '/subhr-login'];
   if (hideNavbarPaths.includes(location.pathname)) return null;
 
   return (
