@@ -333,4 +333,79 @@ const sendStatusChangeEmail = async (email, name, type, status, itemTitle, reaso
   });
 };
 
-module.exports = { generateOTP, sendOTPEmail, sendVerificationLinkEmail, sendContactTicketEmail, sendContactAdminNotifyEmail, sendStatusChangeEmail };
+// ── HR Credentials Email ──────────────────────────────────────────────────────
+const sendHRCredentialsEmail = async ({ toEmail, name, loginEmail, password, hrRole }) => {
+  const isHead = hrRole === 'headhr';
+  const roleLabel    = isHead ? 'Head HR' : 'Sub HR Coordinator';
+  const dashboardUrl = isHead
+    ? `${process.env.FRONTEND_URL || 'http://localhost:5173'}/hr-dashboard`
+    : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/subhr-dashboard`;
+  const loginUrl = isHead
+    ? `${process.env.FRONTEND_URL || 'http://localhost:5173'}/hr-login`
+    : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/subhr-login`;
+  const accentColor = isHead ? '#7c3aed' : '#0ea5e9';
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#05070f;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#05070f;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="540" cellpadding="0" cellspacing="0"
+        style="background:#0c0e24;border-radius:20px;border:1px solid rgba(99,102,241,0.2);overflow:hidden;max-width:100%;">
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,${accentColor},#4f46e5);padding:32px 40px;">
+            <div style="display:inline-flex;align-items:center;gap:10px;">
+              <div style="width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;">
+                <span style="color:#fff;font-weight:900;font-size:18px;">T</span>
+              </div>
+              <span style="color:#fff;font-size:20px;font-weight:900;letter-spacing:-0.5px;">TechiGuru</span>
+            </div>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#f1f5f9;">Welcome to TechiGuru, ${name}!</h1>
+            <p style="margin:0 0 24px;color:#94a3b8;font-size:14px;line-height:1.6;">
+              Your <strong style="color:#fff;">${roleLabel}</strong> account has been created by the admin. Here are your login credentials:
+            </p>
+            <!-- Credentials box -->
+            <div style="background:#161a30;border:1px solid rgba(99,102,241,0.25);border-radius:14px;padding:24px;margin-bottom:24px;">
+              <div style="margin-bottom:14px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.1em;">Login Email</p>
+                <p style="margin:0;font-size:15px;font-weight:700;color:#a5b4fc;font-family:monospace;">${loginEmail}</p>
+              </div>
+              <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:14px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.1em;">Temporary Password</p>
+                <p style="margin:0;font-size:15px;font-weight:700;color:#a5b4fc;font-family:monospace;">${password}</p>
+              </div>
+            </div>
+            <p style="margin:0 0 20px;color:#94a3b8;font-size:13px;">Please change your password after your first login. Keep these credentials secure.</p>
+            <a href="${loginUrl}" target="_blank"
+              style="display:inline-block;background:linear-gradient(135deg,${accentColor},#4f46e5);color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:10px;">
+              Sign in to ${roleLabel} Dashboard →
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 40px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
+            <p style="margin:0;font-size:11px;color:#475569;">© ${new Date().getFullYear()} TechiGuru · This is an automated credentials email.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || `TechiGuru <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: `🔐 Your TechiGuru ${roleLabel} Account Credentials`,
+    html,
+  });
+};
+
+module.exports = { generateOTP, sendOTPEmail, sendVerificationLinkEmail, sendContactTicketEmail, sendContactAdminNotifyEmail, sendStatusChangeEmail, sendHRCredentialsEmail };

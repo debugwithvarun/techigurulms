@@ -383,7 +383,7 @@
 
 const User    = require('../models/User');
 const crypto  = require('crypto');
-const { sendVerificationLinkEmail, sendStatusChangeEmail } = require('../utlis/emailService');
+const { sendVerificationLinkEmail, sendStatusChangeEmail, sendHRCredentialsEmail } = require('../utlis/emailService');
 
 // Try to load optional models gracefully
 let Course, StudentCertificate;
@@ -750,7 +750,7 @@ const getHRUsers = async (req, res) => {
 
 const createHRUser = async (req, res) => {
   try {
-    const { name, email, password, hrRole } = req.body;
+    const { name, email, password, hrRole, mappedEmail } = req.body;
 
     if (!name || !email || !password || !hrRole) {
       return res.status(400).json({ message: 'name, email, password and hrRole are all required' });
@@ -777,14 +777,29 @@ const createHRUser = async (req, res) => {
       instructorStatus: 'approved',
     });
 
+    // Send credentials email to the mapped personal email (if provided) or the login email
+    const deliveryEmail = (mappedEmail || '').trim() || email;
+    try {
+      await sendHRCredentialsEmail({
+        toEmail:    deliveryEmail,
+        name,
+        loginEmail: email,
+        password,
+        hrRole,
+      });
+    } catch (emailErr) {
+      console.error('Credentials email failed (non-fatal):', emailErr.message);
+    }
+
     res.status(201).json({
-      message: `${hrRole === 'headhr' ? 'Head HR' : 'Sub HR'} account created successfully`,
+      message: `${hrRole === 'headhr' ? 'Head HR' : 'Sub HR'} account created successfully${mappedEmail ? `. Credentials sent to ${mappedEmail}` : ''}`,
       user:    user.getPublicProfile(),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 const deleteHRUser = async (req, res) => {
   try {
