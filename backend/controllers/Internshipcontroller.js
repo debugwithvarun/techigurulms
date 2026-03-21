@@ -3,6 +3,7 @@ const InternTask            = require('../models/InternTask');
 const InternTicket          = require('../models/InternTicket');
 const InternProgress        = require('../models/InternProgress');
 const User                  = require('../models/User');
+const mongoose              = require('mongoose');
 const {
   sendApplicationReceivedEmail,
   sendApplicationRejectedEmail,
@@ -14,6 +15,11 @@ const {
   sendCertificateApprovedEmail,
   sendMeetLinkEmail,
 } = require('../utlis/internshipEmailService');
+
+// ── Helper: reject non-ObjectId values before querying MongoDB ─────────────────
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id) && String(new mongoose.Types.ObjectId(id)) === id;
+
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC — Apply for internship  POST /api/internship/apply
@@ -105,6 +111,8 @@ const getAllApplications = async (req, res) => {
 // GET /api/internship/:id — single application detail
 const getApplicationById = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id))
+      return res.status(404).json({ message: 'Application not found' });
     const app = await InternshipApplication.findById(req.params.id)
       .populate('applicant', 'name email avatar profilePoints')
       .populate('subHR', 'name email')
@@ -119,6 +127,8 @@ const getApplicationById = async (req, res) => {
 // PUT /api/internship/:id/shortlist
 const shortlistApplication = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id))
+      return res.status(404).json({ message: 'Application not found' });
     const app = await InternshipApplication.findByIdAndUpdate(
       req.params.id,
       { status: 'shortlisted', headHR: req.user._id },
@@ -134,6 +144,8 @@ const shortlistApplication = async (req, res) => {
 // PUT /api/internship/:id/schedule-interview
 const scheduleInterview = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id))
+      return res.status(404).json({ message: 'Application not found' });
     const { meetLink, scheduledAt } = req.body;
     if (!meetLink) return res.status(400).json({ message: 'Meet link is required' });
 
@@ -160,6 +172,8 @@ const scheduleInterview = async (req, res) => {
 // PUT /api/internship/:id/reject
 const rejectApplication = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id))
+      return res.status(404).json({ message: 'Application not found' });
     const { reason, stage } = req.body; // stage: 'application' | 'post_interview'
     const app = await InternshipApplication.findByIdAndUpdate(
       req.params.id,
@@ -183,6 +197,8 @@ const rejectApplication = async (req, res) => {
 // PUT /api/internship/:id/mark-interviewed
 const markInterviewed = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id))
+      return res.status(404).json({ message: 'Application not found' });
     const app = await InternshipApplication.findByIdAndUpdate(
       req.params.id,
       { status: 'interviewed', headHR: req.user._id },
@@ -198,6 +214,8 @@ const markInterviewed = async (req, res) => {
 // PUT /api/internship/:id/select
 const selectCandidate = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id))
+      return res.status(404).json({ message: 'Application not found' });
     const { startDate, durationMonths, endDate } = req.body;
     const app = await InternshipApplication.findByIdAndUpdate(
       req.params.id,
@@ -223,6 +241,8 @@ const selectCandidate = async (req, res) => {
 // PUT /api/internship/:id/assign-subhr
 const assignSubHR = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.id))
+      return res.status(404).json({ message: 'Application not found' });
     const { subHRId } = req.body;
     if (!subHRId) return res.status(400).json({ message: 'subHRId is required' });
 
