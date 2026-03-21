@@ -183,7 +183,7 @@ const {
   approveRemoval,
   getAdminInternshipOverview,
   getHRUsers,
-} = require('../controllers/internshipController');
+} = require('../controllers/InternshipController');
 
 // ── Multer for resume + offer letter + certificate uploads ────────────────────
 const storage = multer.diskStorage({
