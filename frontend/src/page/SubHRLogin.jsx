@@ -23,19 +23,20 @@ const SubHRLogin = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    try {
-      const data = await login(form.email, form.password);
-      if (!['subhr', 'headhr', 'admin'].includes(data?.role)) {
-        setError('Access denied. This portal is for Sub HR coordinators only.');
-        setLoading(false);
-        return;
-      }
-      navigate('/subhr-dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials');
-    }
+    const result = await login(form.email, form.password);
     setLoading(false);
+    if (!result.success) {
+      setError(result.message || 'Invalid credentials');
+      return;
+    }
+    const role = result.user?.role;
+    if (!['subhr', 'headhr', 'admin'].includes(role)) {
+      setError('Access denied. This portal is for Sub HR coordinators only.');
+      return;
+    }
+    navigate('/subhr-dashboard');
   };
+
 
   return (
     <div className="min-h-screen flex font-sans" style={{ background: '#080f1a' }}>

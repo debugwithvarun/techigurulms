@@ -51,10 +51,9 @@ const BASE_NAV_LINKS = [
     hasDropdown: true,
     dropdownItems: [
       {
-        title: 'Send a Query',
+        title: 'Contact Us',
         path: '/contact',
         icon: <MessageSquare size={16}/>,
-        state: { tab: 'contact' },
       },
       {
         title: 'Internships',

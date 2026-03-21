@@ -23,20 +23,20 @@ const HRLogin = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    try {
-      const data = await login(form.email, form.password);
-      // Only allow headhr (or admin)
-      if (!['headhr', 'admin'].includes(data?.role)) {
-        setError('Access denied. This portal is for Head HR only.');
-        setLoading(false);
-        return;
-      }
-      navigate('/hr-dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials');
-    }
+    const result = await login(form.email, form.password);
     setLoading(false);
+    if (!result.success) {
+      setError(result.message || 'Invalid credentials');
+      return;
+    }
+    const role = result.user?.role;
+    if (!['headhr', 'admin'].includes(role)) {
+      setError('Access denied. This portal is for Head HR only.');
+      return;
+    }
+    navigate('/hr-dashboard');
   };
+
 
   return (
     <div className="min-h-screen flex font-sans" style={{ background: '#0f0a1e' }}>

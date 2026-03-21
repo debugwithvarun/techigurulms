@@ -10,7 +10,7 @@ import {
 // ── Create HR Modal ────────────────────────────────────────────────────────────
 const CreateHRModal = ({ onClose, onCreated }) => {
   const [form, setForm] = useState({
-    name: '', email: '', password: '', hrRole: 'subhr',
+    name: '', email: '', password: '', hrRole: 'subhr', mappedEmail: '',
   });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -113,6 +113,19 @@ const CreateHRModal = ({ onClose, onCreated }) => {
                 {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+              <Mail size={11} /> Mapped Personal Email
+              <span className="text-gray-400 normal-case font-normal text-[10px]"> (optional — where credentials are sent)</span>
+            </label>
+            <input type="email" value={form.mappedEmail} onChange={e => setForm(p => ({ ...p, mappedEmail: e.target.value }))}
+              placeholder="e.g. vc28022004@gmail.com"
+              className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-50" />
+            <p className="text-[10px] text-gray-400 flex items-center gap-1">
+              ⚡ Credentials will be emailed here on account creation. If blank, sent to login email.
+            </p>
           </div>
 
           <div className="flex gap-3 pt-2">
