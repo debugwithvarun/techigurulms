@@ -381,14 +381,14 @@
 // };
 
 
-const User    = require('../models/User');
-const crypto  = require('crypto');
+const User = require('../models/User');
+const crypto = require('crypto');
 const { sendVerificationLinkEmail, sendStatusChangeEmail, sendHRCredentialsEmail } = require('../utlis/emailService');
 
 // Try to load optional models gracefully
 let Course, StudentCertificate;
-try { Course = require('../models/Course'); } catch(e) { Course = null; }
-try { StudentCertificate = require('../models/StudentCertificate'); } catch(e) { StudentCertificate = null; }
+try { Course = require('../models/Course'); } catch (e) { Course = null; }
+try { StudentCertificate = require('../models/StudentCertificate'); } catch (e) { StudentCertificate = null; }
 
 const ADMIN_EMAILS = ['vc2802204@gmail.com', 'techiguru.in@gmail.com'];
 
@@ -425,14 +425,14 @@ const getPlatformStats = async (req, res) => {
 
     res.json({
       users: {
-        students:            totalStudents,
-        instructors:         totalInstructors,
+        students: totalStudents,
+        instructors: totalInstructors,
         pendingInstructors,
-        hrStaff:             totalHR,
+        hrStaff: totalHR,
       },
       courses: {
-        total:    totalCourses,
-        pending:  pendingCourses,
+        total: totalCourses,
+        pending: pendingCourses,
         approved: approvedCourses,
       },
       recentUsers,
@@ -471,10 +471,10 @@ const resendVerificationLink = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (user.isEmailVerified) return res.status(400).json({ message: 'User already verified' });
 
-    const rawToken    = crypto.randomBytes(32).toString('hex');
+    const rawToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
-    user.verifyToken       = hashedToken;
+    user.verifyToken = hashedToken;
     user.verifyTokenExpire = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await user.save({ validateModifiedOnly: true });
 
@@ -490,15 +490,15 @@ const resendVerificationLink = async (req, res) => {
 
 const resendVerificationToAll = async (req, res) => {
   try {
-    const users   = await User.find({ isEmailVerified: false });
+    const users = await User.find({ isEmailVerified: false });
     const results = [];
 
     for (const user of users) {
       try {
-        const rawToken    = crypto.randomBytes(32).toString('hex');
+        const rawToken = crypto.randomBytes(32).toString('hex');
         const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
-        user.verifyToken       = hashedToken;
+        user.verifyToken = hashedToken;
         user.verifyTokenExpire = new Date(Date.now() + 24 * 60 * 60 * 1000);
         await user.save({ validateModifiedOnly: true });
 
@@ -510,7 +510,7 @@ const resendVerificationToAll = async (req, res) => {
       }
     }
 
-    const sent   = results.filter(r => r.status === 'sent').length;
+    const sent = results.filter(r => r.status === 'sent').length;
     const failed = results.filter(r => r.status === 'failed').length;
     res.json({ message: `Sent ${sent}, failed ${failed}`, sent, failed, results });
   } catch (err) {
@@ -662,10 +662,10 @@ const approveStudentCertificate = async (req, res) => {
     const cert = await StudentCertificate.findByIdAndUpdate(
       req.params.id,
       {
-        status:        'approved',
-        approvedBy:    req.user._id,
-        approvedAt:    new Date(),
-        adminNote:     note || '',
+        status: 'approved',
+        approvedBy: req.user._id,
+        approvedAt: new Date(),
+        adminNote: note || '',
         pointsAwarded: 50,
       },
       { new: true }
@@ -709,22 +709,22 @@ const getLeaderboard = async (req, res) => {
       .lean();
 
     const leaderboard = users.map(u => ({
-      _id:                u._id,
-      name:               u.name,
-      email:              u.email,
-      role:               u.role,
-      avatar:             u.avatar,
-      createdAt:          u.createdAt,
-      totalPoints:        (u.profilePoints     || 0)
-                        + (u.certificatePoints || 0)
-                        + (u.coursePoints      || 0)
-                        + (u.interviewPoints   || 0),
-      interviewPoints:    u.interviewPoints    || 0,
-      certificatePoints:  u.certificatePoints  || 0,
-      coursePoints:       u.coursePoints       || 0,
-      interviewSessions:  u.interviewSessions  || 0,
+      _id: u._id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      avatar: u.avatar,
+      createdAt: u.createdAt,
+      totalPoints: (u.profilePoints || 0)
+        + (u.certificatePoints || 0)
+        + (u.coursePoints || 0)
+        + (u.interviewPoints || 0),
+      interviewPoints: u.interviewPoints || 0,
+      certificatePoints: u.certificatePoints || 0,
+      coursePoints: u.coursePoints || 0,
+      interviewSessions: u.interviewSessions || 0,
       earnedCertificates: u.earnedCertificates?.length || 0,
-      enrolledCourses:    u.enrolledCourses?.length    || 0,
+      enrolledCourses: u.enrolledCourses?.length || 0,
     })).sort((a, b) => b.totalPoints - a.totalPoints);
 
     res.json({ leaderboard });
@@ -739,11 +739,13 @@ const getLeaderboard = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const getHRUsers = async (req, res) => {
   try {
+    console.log("getHRUsers");
     const hrUsers = await User.find({ role: { $in: ['headhr', 'subhr'] } })
       .select('-password')
       .sort({ createdAt: -1 });
     res.json(hrUsers);
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -772,8 +774,8 @@ const createHRUser = async (req, res) => {
       name,
       email,
       password,
-      role:             hrRole,
-      isEmailVerified:  true,
+      role: hrRole,
+      isEmailVerified: true,
       instructorStatus: 'approved',
     });
 
@@ -781,7 +783,7 @@ const createHRUser = async (req, res) => {
     const deliveryEmail = (mappedEmail || '').trim() || email;
     try {
       await sendHRCredentialsEmail({
-        toEmail:    deliveryEmail,
+        toEmail: deliveryEmail,
         name,
         loginEmail: email,
         password,
@@ -793,7 +795,7 @@ const createHRUser = async (req, res) => {
 
     res.status(201).json({
       message: `${hrRole === 'headhr' ? 'Head HR' : 'Sub HR'} account created successfully${mappedEmail ? `. Credentials sent to ${mappedEmail}` : ''}`,
-      user:    user.getPublicProfile(),
+      user: user.getPublicProfile(),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
