@@ -8,7 +8,7 @@ import {
     Plus, Search, LogOut, Menu, X, RefreshCw,
     Ticket, BarChart3, Send, Loader2, AlertCircle,
     TrendingUp, ArrowUp, ArrowDown, Minus, Eye,
-    Calendar, ChevronDown, Briefcase
+    Calendar, ChevronDown, Briefcase, Edit2, Trash2
 } from 'lucide-react';
 
 const PRIORITY_COLORS = {
@@ -25,8 +25,13 @@ const PROGRESS_OPTIONS = [
 ];
 
 // ── Task Assignment Modal ──────────────────────────────────────────────────────
-const TaskModal = ({ intern, onClose, onAssigned }) => {
-    const [form, setForm] = useState({ title: '', description: '', dueDate: '', priority: 'medium' });
+const TaskModal = ({ intern, initialData, onClose, onAssigned }) => {
+    const [form, setForm] = useState(initialData ? {
+        title: initialData.title || '',
+        description: initialData.description || '',
+        dueDate: initialData.dueDate ? initialData.dueDate.split('T')[0] : '',
+        priority: initialData.priority || 'medium'
+    } : { title: '', description: '', dueDate: '', priority: 'medium' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -34,10 +39,14 @@ const TaskModal = ({ intern, onClose, onAssigned }) => {
         e.preventDefault();
         setLoading(true); setError('');
         try {
-            await api.post('/internship/tasks', { applicationId: intern._id, ...form });
+            if (initialData?._id) {
+                await api.put(`/internship/tasks/${initialData._id}`, form);
+            } else {
+                await api.post('/internship/tasks', { applicationId: intern._id, ...form });
+            }
             onAssigned();
             onClose();
-        } catch (err) { setError(err.response?.data?.message || 'Failed to assign task'); }
+        } catch (err) { setError(err.response?.data?.message || 'Failed to save task'); }
         setLoading(false);
     };
 
@@ -84,7 +93,7 @@ const TaskModal = ({ intern, onClose, onAssigned }) => {
                         <button type="button" onClick={onClose} className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50">Cancel</button>
                         <button type="submit" disabled={loading}
                             className="flex-1 py-3 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2">
-                            {loading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Assign Task
+                            {loading ? <Loader2 size={14} className="animate-spin" /> : (initialData ? <Edit2 size={14} /> : <Plus size={14} />)} {initialData ? 'Update Task' : 'Assign Task'}
                         </button>
                     </div>
                 </form>
@@ -192,6 +201,15 @@ const InternPanel = ({ intern, tasks, tickets, onClose, onTaskAssigned, onMarkPr
     const [feedback, setFeedback]           = useState('');
     const [resolutionMap, setResolutionMap] = useState({});
     const [showTaskModal, setShowTaskModal] = useState(false);
+    const [editingTask, setEditingTask]     = useState(null);
+
+    const handleDeleteTask = async (taskId) => {
+        if (!window.confirm('Are you sure you want to delete this task?')) return;
+        try {
+            await api.delete(`/internship/tasks/${taskId}`);
+            onTaskAssigned(); // Refresh dashboard
+        } catch (err) { alert(err.response?.data?.message || 'Failed to delete task'); }
+    };
 
     if (!intern) return null;
 
@@ -245,10 +263,22 @@ const InternPanel = ({ intern, tasks, tickets, onClose, onTaskAssigned, onMarkPr
                                     <button onClick={() => setShowTaskModal(true)} className="mt-4 px-5 py-2 bg-purple-600 text-white text-sm font-bold rounded-xl">Assign First Task</button>
                                 </div>
                             ) : tasks.map(task => (
-                                <div key={task._id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <p className="font-bold text-gray-900 text-sm">{task.title}</p>
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ml-2 shrink-0 ${PRIORITY_COLORS[task.priority]}`}>{task.priority}</span>
+                                <div key={task._id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm group">
+                                    <div className="flex items-start justify-between mb-2 gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-bold text-gray-900 text-sm truncate">{task.title}</p>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${PRIORITY_COLORS[task.priority]}`}>{task.priority}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => { setEditingTask(task); setShowTaskModal(true); }} className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50">
+                                                <Edit2 size={14} />
+                                            </button>
+                                            <button onClick={() => handleDeleteTask(task._id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50">
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
                                     </div>
                                     {task.description && <p className="text-xs text-gray-500 mb-2 line-clamp-2">{task.description}</p>}
                                     <div className="flex items-center justify-between">
@@ -362,7 +392,7 @@ const InternPanel = ({ intern, tasks, tickets, onClose, onTaskAssigned, onMarkPr
             {/* Task Modal */}
             <AnimatePresence>
                 {showTaskModal && (
-                    <TaskModal intern={intern} onClose={() => setShowTaskModal(false)} onAssigned={onTaskAssigned} />
+                    <TaskModal intern={intern} initialData={editingTask} onClose={() => { setShowTaskModal(false); setEditingTask(null); }} onAssigned={onTaskAssigned} />
                 )}
             </AnimatePresence>
         </div>
@@ -382,12 +412,6 @@ const SubHRDashboard = () => {
     const [showMeetModal, setShowMeetModal]   = useState(false);
     const [sidebarOpen, setSidebarOpen]       = useState(false);
     const [activeTab, setActiveTab]           = useState('interns');
-
-    useEffect(() => {
-        if (!user) { navigate('/login'); return; }
-        if (!['subhr', 'headhr', 'admin'].includes(user.role)) { navigate('/'); return; }
-        loadAll();
-    }, [user]);
 
     const loadAll = useCallback(async () => {
         setLoading(true);
@@ -412,6 +436,12 @@ const SubHRDashboard = () => {
         } catch (err) { console.error(err); }
         setLoading(false);
     }, []);
+
+    useEffect(() => {
+        if (!user) { navigate('/login'); return; }
+        if (!['subhr', 'headhr', 'admin'].includes(user.role)) { navigate('/'); return; }
+        loadAll();
+    }, [user, navigate, loadAll]);
 
     const handleMarkProgress = async (applicationId, rating, remarks, week) => {
         try {

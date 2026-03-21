@@ -429,6 +429,38 @@ const reviewTask = async (req, res) => {
   }
 };
 
+// PUT /api/internship/tasks/:id  (SubHR edits task)
+const updateTask = async (req, res) => {
+  try {
+    const { title, description, dueDate, priority } = req.body;
+    const task = await InternTask.findByIdAndUpdate(
+      req.params.id,
+      {
+        title,
+        description: description || '',
+        dueDate: dueDate ? new Date(dueDate) : undefined,
+        priority: priority || 'medium',
+      },
+      { new: true }
+    );
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+    res.json({ message: 'Task updated', task });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// DELETE /api/internship/tasks/:id  (SubHR deletes task)
+const deleteTask = async (req, res) => {
+  try {
+    const task = await InternTask.findByIdAndDelete(req.params.id);
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+    res.json({ message: 'Task deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TICKETS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -714,6 +746,8 @@ module.exports = {
   getTasksForIntern,
   submitTask,
   reviewTask,
+  updateTask,
+  deleteTask,
   raiseTicket,
   getMyTickets,
   getTicketsForSubHR,

@@ -24,6 +24,8 @@ const {
   getTasksForIntern,
   submitTask,
   reviewTask,
+  updateTask,
+  deleteTask,
   raiseTicket,
   getMyTickets,
   getTicketsForSubHR,
@@ -100,6 +102,8 @@ router.get('/tasks/my',                      protect,                     getMyT
 router.get('/tasks/intern/:applicationId',   protect, isSubHR,            getTasksForIntern);
 router.put('/tasks/:id/submit',              protect,                     submitTask);
 router.put('/tasks/:id/review',              protect, isSubHR,            reviewTask);
+router.put('/tasks/:id',                     protect, isSubHR,            updateTask);
+router.delete('/tasks/:id',                  protect, isSubHR,            deleteTask);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TICKETS
