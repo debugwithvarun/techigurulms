@@ -75,10 +75,55 @@ router.post('/apply', protect, upload.single('resume'), applyForInternship);
 router.get('/my',     protect, getMyApplications);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HEAD HR + ADMIN
+// HEAD HR + ADMIN  (literal paths FIRST — before /:id wildcard)
 // ─────────────────────────────────────────────────────────────────────────────
 router.get('/all',              protect, isHeadHR, getAllApplications);
 router.get('/admin/all',        protect, isAdmin,  getAdminInternshipOverview);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUB HR  (literal path — must be above /:id)
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/my-interns',       protect, isSubHR,  getMyInterns);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HR USER MANAGEMENT  (literal paths — must be above /:id)
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/hr-users',        protect, isHeadHR, getHRUsers);
+router.post('/hr-users',       protect, isAdmin,  createHRUser);
+router.delete('/hr-users/:id', protect, isAdmin,  deleteHRUser);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TASKS  (all start with /tasks — won't clash with /:id)
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/tasks',                        protect, isSubHR,            assignTask);
+router.get('/tasks/my',                      protect,                     getMyTasks);
+router.get('/tasks/intern/:applicationId',   protect, isSubHR,            getTasksForIntern);
+router.put('/tasks/:id/submit',              protect,                     submitTask);
+router.put('/tasks/:id/review',              protect, isSubHR,            reviewTask);
+router.put('/tasks/:id',                     protect, isSubHR,            updateTask);
+router.delete('/tasks/:id',                  protect, isSubHR,            deleteTask);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TICKETS  (all start with /tickets — won't clash with /:id)
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/tickets',          protect,             raiseTicket);
+router.get('/tickets/my',        protect,             getMyTickets);
+router.get('/tickets/subhr',     protect, isSubHR,    getTicketsForSubHR);
+router.get('/tickets/all',       protect, isHeadHR,   getAllTickets);
+router.put('/tickets/:id/resolve', protect, isSubHR,  resolveTicket);
+router.put('/tickets/:id/close',   protect, isHeadHR, closeTicket);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROGRESS  (all start with /progress — won't clash with /:id)
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/progress',                     protect, isSubHR,   markProgress);
+router.get('/progress/:applicationId',       protect, isHR,      getProgressForIntern);
+router.post('/progress/:id/request-removal', protect, isSubHR,   requestRemoval);
+router.put('/progress/:id/approve-removal',  protect, isHeadHR,  approveRemoval);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARAMETERIZED /:id routes  (MUST come LAST to avoid swallowing literal paths)
+// ─────────────────────────────────────────────────────────────────────────────
 router.get('/:id',              protect, isHR,     getApplicationById);
 router.put('/:id/shortlist',    protect, isHeadHR, shortlistApplication);
 router.put('/:id/schedule-interview', protect, isHeadHR, scheduleInterview);
@@ -90,46 +135,5 @@ router.put('/:id/offer-letter', protect, isHeadHR, sendOfferLetter);
 router.put('/:id/approve-certificate', protect, isHeadHR, approveCertificate);
 router.put('/:id/complete',     protect, isHeadHR, markCompleted);
 router.post('/:id/send-meet',   protect, isSubHR,  sendMeetLink);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SUB HR
-// ─────────────────────────────────────────────────────────────────────────────
-router.get('/my-interns',       protect, isSubHR,  getMyInterns);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TASKS
-// ─────────────────────────────────────────────────────────────────────────────
-router.post('/tasks',                        protect, isSubHR,            assignTask);
-router.get('/tasks/my',                      protect,                     getMyTasks);
-router.get('/tasks/intern/:applicationId',   protect, isSubHR,            getTasksForIntern);
-router.put('/tasks/:id/submit',              protect,                     submitTask);
-router.put('/tasks/:id/review',              protect, isSubHR,            reviewTask);
-router.put('/tasks/:id',                     protect, isSubHR,            updateTask);
-router.delete('/tasks/:id',                  protect, isSubHR,            deleteTask);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TICKETS
-// ─────────────────────────────────────────────────────────────────────────────
-router.post('/tickets',          protect,             raiseTicket);
-router.get('/tickets/my',        protect,             getMyTickets);
-router.get('/tickets/subhr',     protect, isSubHR,    getTicketsForSubHR);
-router.get('/tickets/all',       protect, isHeadHR,   getAllTickets);
-router.put('/tickets/:id/resolve', protect, isSubHR,  resolveTicket);
-router.put('/tickets/:id/close',   protect, isHeadHR, closeTicket);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PROGRESS
-// ─────────────────────────────────────────────────────────────────────────────
-router.post('/progress',                     protect, isSubHR,   markProgress);
-router.get('/progress/:applicationId',       protect, isHR,      getProgressForIntern);
-router.post('/progress/:id/request-removal', protect, isSubHR,   requestRemoval);
-router.put('/progress/:id/approve-removal',  protect, isHeadHR,  approveRemoval);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HR USER MANAGEMENT (Admin only for create/delete; HeadHR can list)
-// ─────────────────────────────────────────────────────────────────────────────
-router.get('/hr-users',        protect, isHeadHR, getHRUsers);
-router.post('/hr-users',       protect, isAdmin,  createHRUser);
-router.delete('/hr-users/:id', protect, isAdmin,  deleteHRUser);
 
 module.exports = router;
