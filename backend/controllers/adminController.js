@@ -739,14 +739,12 @@ const getLeaderboard = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const getHRUsers = async (req, res) => {
   try {
-    console.log("getHRUsers");
     const hrUsers = await User.find({ role: { $in: ['headhr', 'subhr'] } })
       .select('-password')
       .sort({ createdAt: -1 });
     res.json(hrUsers);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: `getHRUsers error by varun : ${err.message} ` });
+    res.status(500).json({ message: err.message });
   }
 };
 

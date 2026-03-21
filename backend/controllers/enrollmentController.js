@@ -116,7 +116,9 @@ const issueCertificate = async (req, res) => {
         // Add to user profile + award points
         const user = await User.findById(req.user._id);
         user.earnedCertificates.push(certData);
-        user.completedCourses.addToSet?.(course._id) || user.completedCourses.push(course._id);
+        if (!user.completedCourses.map(id => id.toString()).includes(course._id.toString())) {
+            user.completedCourses.push(course._id);
+        }
         user.profilePoints += 100; // 100 points per certificate
 
         // Bonus badge for milestones

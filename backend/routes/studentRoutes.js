@@ -16,7 +16,7 @@ const {
 // Multer storage for cert uploads
 const storage = multer.diskStorage({
     destination(req, file, cb) {
-        cb(null, 'uploads/');
+        cb(null, path.join(__dirname, '../uploads/'));
     },
     filename(req, file, cb) {
         cb(null, `student-cert-${req.user._id}-${Date.now()}${path.extname(file.originalname)}`);
