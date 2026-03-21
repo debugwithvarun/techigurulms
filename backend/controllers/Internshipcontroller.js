@@ -1,9 +1,9 @@
 const InternshipApplication = require('../models/InternshipApplication');
-const InternTask            = require('../models/InternTask');
-const InternTicket          = require('../models/InternTicket');
-const InternProgress        = require('../models/InternProgress');
-const User                  = require('../models/User');
-const mongoose              = require('mongoose');
+const InternTask = require('../models/InternTask');
+const InternTicket = require('../models/InternTicket');
+const InternProgress = require('../models/InternProgress');
+const User = require('../models/User');
+const mongoose = require('mongoose');
 const {
   sendApplicationReceivedEmail,
   sendApplicationRejectedEmail,
@@ -45,7 +45,7 @@ const applyForInternship = async (req, res) => {
       return res.status(400).json({ message: 'You already have an active application for this role.' });
     }
 
-    const resumeUrl  = `/${req.file.path.replace(/\\/g, '/')}`;
+    const resumeUrl = `/${req.file.path.replace(/\\/g, '/')}`;
     const resumeName = req.file.originalname;
 
     const app = await InternshipApplication.create({
@@ -89,12 +89,12 @@ const getAllApplications = async (req, res) => {
     const { status, role, search } = req.query;
     const query = {};
     if (status && status !== 'all') query.status = status;
-    if (role)   query.role = { $regex: role, $options: 'i' };
+    if (role) query.role = { $regex: role, $options: 'i' };
     if (search) {
       query.$or = [
         { fullName: { $regex: search, $options: 'i' } },
-        { email:    { $regex: search, $options: 'i' } },
-        { college:  { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { college: { $regex: search, $options: 'i' } },
       ];
     }
     const apps = await InternshipApplication.find(query)
@@ -223,7 +223,7 @@ const selectCandidate = async (req, res) => {
         status: 'selected',
         headHR: req.user._id,
         internshipStartDate: startDate ? new Date(startDate) : undefined,
-        internshipEndDate:   endDate   ? new Date(endDate)   : undefined,
+        internshipEndDate: endDate ? new Date(endDate) : undefined,
         durationMonths: durationMonths || 0,
       },
       { new: true }
@@ -391,13 +391,13 @@ const assignTask = async (req, res) => {
     if (!app) return res.status(404).json({ message: 'Application not found' });
 
     const task = await InternTask.create({
-      intern:      app.applicant,
+      intern: app.applicant,
       application: applicationId,
-      assignedBy:  req.user._id,
+      assignedBy: req.user._id,
       title,
       description: description || '',
-      dueDate:     dueDate ? new Date(dueDate) : undefined,
-      priority:    priority || 'medium',
+      dueDate: dueDate ? new Date(dueDate) : undefined,
+      priority: priority || 'medium',
     });
 
     res.status(201).json({ message: 'Task assigned', task });
@@ -514,8 +514,8 @@ const raiseTicket = async (req, res) => {
     if (!app) return res.status(400).json({ message: 'No active internship found' });
 
     const ticket = await InternTicket.create({
-      raisedBy:      req.user._id,
-      application:   app._id,
+      raisedBy: req.user._id,
+      application: app._id,
       assignedSubHR: app.subHR,
       subject,
       description,
@@ -612,12 +612,12 @@ const markProgress = async (req, res) => {
     if (!app) return res.status(404).json({ message: 'Application not found' });
 
     const progress = await InternProgress.create({
-      intern:      app.applicant,
+      intern: app.applicant,
       application: applicationId,
-      markedBy:    req.user._id,
+      markedBy: req.user._id,
       rating,
       remarks: remarks || '',
-      week:    week    || 1,
+      week: week || 1,
     });
 
     res.status(201).json({ message: 'Progress marked', progress });
