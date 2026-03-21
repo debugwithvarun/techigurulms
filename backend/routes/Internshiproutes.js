@@ -146,10 +146,8 @@ const multer = require('multer');
 const path = require('path');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-// ✅ getHRUsers / createHRUser / deleteHRUser are intentionally NOT imported here.
-// Those live at /api/admin/hr-users (adminRoutes.js + adminController.js).
-// Importing them here caused the entire router to silently fail to mount,
-// making every /api/internship/* route return 404.
+// ✅ getHRUsers is imported so HEAD HR can list Sub HR users from the dashboard.
+// createHRUser / deleteHRUser remain in adminRoutes.js (admin-only operations).
 const {
   applyForInternship,
   getMyApplications,
@@ -184,6 +182,7 @@ const {
   requestRemoval,
   approveRemoval,
   getAdminInternshipOverview,
+  getHRUsers,
 } = require('../controllers/internshipController');
 
 // ── Multer for resume + offer letter + certificate uploads ────────────────────
@@ -223,6 +222,9 @@ router.get('/my', protect, getMyApplications);
 router.get('/all', protect, isHeadHR, getAllApplications);
 router.get('/admin/all', protect, isAdmin, getAdminInternshipOverview);
 router.get('/my-interns', protect, isSubHR, getMyInterns);
+
+// ── HR USER LIST (Head HR needs this to assign Sub HRs to interns) ────────────
+router.get('/hr-users', protect, isHeadHR, getHRUsers);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TASKS

@@ -16,7 +16,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    cb(null, 'uploads/'); // Ensure this folder exists in your root
+    cb(null, path.join(__dirname, '../uploads/courses/'));
   },
   filename(req, file, cb) {
     cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
@@ -57,16 +57,18 @@ router.route('/')
 router.route('/mycourses')
   .get(protect, authorize('instructor', 'admin'), getMyCourses);
 
-router.route('/:id')
-  .get(getCourseById)
-  .put(protect, authorize('instructor', 'admin'), updateCourse)
-  .delete(protect, authorize('instructor', 'admin'), deleteCourse);
-
 // ── Enrollment & Certificates ────────────────────────────────────────────────
 router.post('/:id/enroll', protect, enrollInCourse);
 router.put('/:id/progress', protect, updateProgress);
 router.get('/:id/my-enrollment', protect, getMyEnrollment);
 router.post('/:id/certificate', protect, issueCertificate);
+
+// ⚠️  MUST be declared BEFORE /:id  — otherwise Express catches 'user' as an ObjectId
 router.get('/user/my-certificates', protect, getMyCertificates);
+
+router.route('/:id')
+  .get(getCourseById)
+  .put(protect, authorize('instructor', 'admin'), updateCourse)
+  .delete(protect, authorize('instructor', 'admin'), deleteCourse);
 
 module.exports = router;

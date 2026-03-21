@@ -1,5 +1,7 @@
-const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config(); // ← MUST be first so process.env is populated before any require()
+
+const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -17,10 +19,15 @@ const internshipRoutes = require('./routes/internshipRoutes');
 const connectDB = require('./config/db');
 const seedInstructors = require('./utlis/Seeder');
 
-dotenv.config();
+// dotenv already loaded at top of file
 
 // --- Ensure upload directories exist ---
-const UPLOAD_DIRS = ['uploads', 'uploads/internship'];
+const UPLOAD_DIRS = [
+  'uploads',
+  'uploads/internship',
+  'uploads/avatars',
+  'uploads/courses',
+];
 UPLOAD_DIRS.forEach(dir => {
   const fullPath = path.join(__dirname, dir);
   if (!fs.existsSync(fullPath)) {

@@ -650,7 +650,7 @@ const HeadHRDashboard = () => {
       const [appsRes, ticketsRes, subHRRes] = await Promise.all([
         api.get("/internship/all"),
         api.get("/internship/tickets/all"),
-        api.get("/admin/hr-users").catch(() => ({ data: [] })),
+        api.get("/internship/hr-users").catch(() => ({ data: [] })),
       ]);
       setApplications(appsRes.data || []);
       setTickets(ticketsRes.data || []);
