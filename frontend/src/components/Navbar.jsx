@@ -9,6 +9,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import Tlogo from '../assets/Tlogo.svg';
+
 
 const BASE_NAV_LINKS = [
   { name: 'Home', path: '/', hasDropdown: false },
@@ -55,10 +57,9 @@ const BASE_NAV_LINKS = [
         state: { tab: 'contact' },
       },
       {
-        title: 'Apply for Internship',
-        path: '/contact',
+        title: 'Internships',
+        path: '/internship',
         icon: <Briefcase size={16}/>,
-        state: { tab: 'internship' },
         badge: 'Hiring',
       },
     ],
@@ -207,14 +208,14 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-200 transition-transform group-hover:scale-105">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-            </div>
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <img
+              src={Tlogo}
+              alt="Techiguru"
+              className="w-10 h-10 rounded-xl object-contain transition-transform group-hover:scale-105 shadow-lg shadow-purple-200"
+            />
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600">
-              TechiGuru
+              Techiguru
             </span>
           </Link>
 

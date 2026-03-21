@@ -32,6 +32,7 @@ import AdminLoginPage from "./components/Login/AdminLogin";
 import SearchPage from "./page/SearchPage";
 import CareersPage from "./page/CareersPage";
 import BlogPage from "./page/BlogPage";
+import InternshipPage from "./page/InternshipPage";
 
 // ── NEW: SSO redirect bridge page (no Navbar/Footer — standalone fullscreen)
 import SsoRedirectPage from "./page/SsoRedirectPage";
@@ -96,6 +97,7 @@ function App() {
               <Route path="/search" element={<SearchPage />} />
               <Route path="/careers" element={<CareersPage />} />
               <Route path="/blog" element={<BlogPage />} />
+              <Route path="/internship" element={<InternshipPage />} />
             </Route>
 
             {/* COURSE - Public marketing page with Navbar */}

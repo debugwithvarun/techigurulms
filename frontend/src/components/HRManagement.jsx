@@ -20,7 +20,7 @@ const CreateHRModal = ({ onClose, onCreated }) => {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      await api.post('/internship/hr-users', form);
+      await api.post('/admin/hr-users', form);
       onCreated();
       onClose();
     } catch (err) {
@@ -151,7 +151,7 @@ const HRManagement = () => {
   const loadHRUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/internship/hr-users');
+      const { data } = await api.get('/admin/hr-users');
       setHrUsers(data || []);
     } catch (err) {
       showToast('Failed to load HR users', 'error');
@@ -164,7 +164,7 @@ const HRManagement = () => {
   const handleDelete = async (id) => {
     setDeleting(true);
     try {
-      await api.delete(`/internship/hr-users/${id}`);
+      await api.delete(`/admin/hr-users/${id}`);
       setHrUsers(prev => prev.filter(u => u._id !== id));
       setDeleteId(null);
       showToast('HR account removed successfully');

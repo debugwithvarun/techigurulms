@@ -35,7 +35,7 @@ const services = [
     tagColor: 'bg-purple-50 text-purple-700 border-purple-100',
     gradient: 'from-purple-500 to-indigo-600',
     lightBg: 'bg-purple-50',
-    link: '#',
+    link: 'https://imshopper-ai-quiz-generator.hf.space/',
     featured: false,
   },
   {
@@ -47,7 +47,7 @@ const services = [
     tagColor: 'bg-blue-50 text-blue-700 border-blue-100',
     gradient: 'from-blue-500 to-cyan-500',
     lightBg: 'bg-blue-50',
-    link: '#',
+    link: 'https://imshopper-ai-resume-enhancer.hf.space/',
     featured: false,
   },
   {
@@ -59,7 +59,7 @@ const services = [
     tagColor: 'bg-emerald-50 text-emerald-700 border-emerald-100',
     gradient: 'from-emerald-500 to-teal-500',
     lightBg: 'bg-emerald-50',
-    link: '#',
+    link: 'https://imshopper-ai-softskills-trainer.hf.space/',
     featured: false,
   },
   {
@@ -71,7 +71,7 @@ const services = [
     tagColor: 'bg-pink-50 text-pink-700 border-pink-100',
     gradient: 'from-pink-500 to-rose-500',
     lightBg: 'bg-pink-50',
-    link: '#',
+    link: 'https://imshopper-ai-code-generator.hf.space/',
     featured: false,
   },
   {
@@ -83,7 +83,7 @@ const services = [
     tagColor: 'bg-violet-50 text-violet-700 border-violet-100',
     gradient: 'from-violet-500 to-purple-600',
     lightBg: 'bg-violet-50',
-    link: '#',
+    link: 'https://imshopper-ai-jobs-assistant.hf.space/',
     featured: false,
   },
   {
@@ -95,7 +95,7 @@ const services = [
     tagColor: 'bg-orange-50 text-orange-700 border-orange-100',
     gradient: 'from-orange-500 to-amber-500',
     lightBg: 'bg-orange-50',
-    link: '#',
+    link: 'https://imshopper-ai-mentors.hf.space/',
     featured: false,
   },
   {
@@ -107,7 +107,7 @@ const services = [
     tagColor: 'bg-cyan-50 text-cyan-700 border-cyan-100',
     gradient: 'from-cyan-500 to-blue-500',
     lightBg: 'bg-cyan-50',
-    link: '#',
+    link: 'https://imshopper-ai-doc-convertor.hf.space/',
     featured: false,
   },
 ];

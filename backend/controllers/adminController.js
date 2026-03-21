@@ -383,6 +383,7 @@
 
 const User    = require('../models/User');
 const crypto  = require('crypto');
+const { sendVerificationLinkEmail, sendStatusChangeEmail } = require('../utlis/emailService');
 
 // Try to load optional models gracefully
 let Course, StudentCertificate;
@@ -468,6 +469,7 @@ const resendVerificationLink = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.isEmailVerified) return res.status(400).json({ message: 'User already verified' });
 
     const rawToken    = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
@@ -477,10 +479,8 @@ const resendVerificationLink = async (req, res) => {
     await user.save({ validateModifiedOnly: true });
 
     const verifyUrl = `${process.env.BACKEND_URL || 'https://api.techiguru.in'}/api/auth/verify-email?token=${rawToken}`;
-
-    // Use your existing emailService here
-    // await sendVerificationEmail(user.email, user.name, verifyUrl);
-    console.log(`Verification link for ${user.email}: ${verifyUrl}`);
+    sendVerificationLinkEmail(user.email, user.name, verifyUrl)
+      .catch(err => console.error('Verification email error:', err));
 
     res.json({ message: `Verification link sent to ${user.email}` });
   } catch (err) {
@@ -502,7 +502,8 @@ const resendVerificationToAll = async (req, res) => {
         user.verifyTokenExpire = new Date(Date.now() + 24 * 60 * 60 * 1000);
         await user.save({ validateModifiedOnly: true });
 
-        // await sendVerificationEmail(user.email, user.name, verifyUrl);
+        const verifyUrl = `${process.env.BACKEND_URL || 'https://api.techiguru.in'}/api/auth/verify-email?token=${rawToken}`;
+        await sendVerificationLinkEmail(user.email, user.name, verifyUrl);
         results.push({ email: user.email, status: 'sent' });
       } catch (e) {
         results.push({ email: user.email, status: 'failed', error: e.message });
@@ -546,6 +547,8 @@ const approveInstructor = async (req, res) => {
       { new: true }
     ).select('-password');
     if (!user) return res.status(404).json({ message: 'Instructor not found' });
+    sendStatusChangeEmail(user.email, user.name, 'instructor', 'approved', 'Instructor Application')
+      .catch(err => console.error('Approve email error:', err));
     res.json({ message: 'Instructor approved', user });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -560,6 +563,9 @@ const rejectInstructor = async (req, res) => {
       { new: true }
     ).select('-password');
     if (!user) return res.status(404).json({ message: 'Instructor not found' });
+    const reason = req.body.reason || 'Your application did not meet our current requirements.';
+    sendStatusChangeEmail(user.email, user.name, 'instructor', 'rejected', 'Instructor Application', reason)
+      .catch(err => console.error('Reject email error:', err));
     res.json({ message: 'Instructor rejected', user });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -598,10 +604,14 @@ const approveCourse = async (req, res) => {
     if (!Course) return res.status(503).json({ message: 'Course model not available' });
     const course = await Course.findByIdAndUpdate(
       req.params.id,
-      { approvalStatus: 'approved' },
+      { approvalStatus: 'approved', approvedAt: new Date(), approvedBy: req.user._id, status: 'Active' },
       { new: true }
-    );
+    ).populate('instructor', 'name email');
     if (!course) return res.status(404).json({ message: 'Course not found' });
+    if (course.instructor?.email) {
+      sendStatusChangeEmail(course.instructor.email, course.instructor.name, 'course', 'approved', course.title)
+        .catch(err => console.error('Course approve email error:', err));
+    }
     res.json({ message: 'Course approved', course });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -614,10 +624,14 @@ const rejectCourse = async (req, res) => {
     const { reason } = req.body;
     const course = await Course.findByIdAndUpdate(
       req.params.id,
-      { approvalStatus: 'rejected', rejectionReason: reason || '' },
+      { approvalStatus: 'rejected', rejectionReason: reason || '', status: 'Inactive' },
       { new: true }
-    );
+    ).populate('instructor', 'name email');
     if (!course) return res.status(404).json({ message: 'Course not found' });
+    if (course.instructor?.email) {
+      sendStatusChangeEmail(course.instructor.email, course.instructor.name, 'course', 'rejected', course.title, reason)
+        .catch(err => console.error('Course reject email error:', err));
+    }
     res.json({ message: 'Course rejected', course });
   } catch (err) {
     res.status(500).json({ message: err.message });
