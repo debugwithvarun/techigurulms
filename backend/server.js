@@ -14,7 +14,7 @@ const blogRoutes = require('./routes/blogRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const contactRoutes = require('./routes/contactRoutes');
-const internshipRoutes = require('./routes/internshiproutes');
+const internshipRoutes = require('./routes/internshipRoutes');
 
 const connectDB = require('./config/db');
 const seedInstructors = require('./utlis/Seeder');
