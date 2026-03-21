@@ -11,6 +11,7 @@ const {
   getApplicationById,
   shortlistApplication,
   scheduleInterview,
+  markInterviewed,
   rejectApplication,
   selectCandidate,
   assignSubHR,
@@ -81,6 +82,7 @@ router.get('/admin/all',        protect, isAdmin,  getAdminInternshipOverview);
 router.get('/:id',              protect, isHR,     getApplicationById);
 router.put('/:id/shortlist',    protect, isHeadHR, shortlistApplication);
 router.put('/:id/schedule-interview', protect, isHeadHR, scheduleInterview);
+router.put('/:id/mark-interviewed',   protect, isHeadHR, markInterviewed);
 router.put('/:id/reject',       protect, isHeadHR, rejectApplication);
 router.put('/:id/select',       protect, isHeadHR, selectCandidate);
 router.put('/:id/assign-subhr', protect, isHeadHR, assignSubHR);
@@ -124,10 +126,10 @@ router.post('/progress/:id/request-removal', protect, isSubHR,   requestRemoval)
 router.put('/progress/:id/approve-removal',  protect, isHeadHR,  approveRemoval);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HR USER MANAGEMENT (Admin only)
+// HR USER MANAGEMENT (Admin only for create/delete; HeadHR can list)
 // ─────────────────────────────────────────────────────────────────────────────
-router.get('/hr-users',      protect, isAdmin, getHRUsers);
-router.post('/hr-users',     protect, isAdmin, createHRUser);
-router.delete('/hr-users/:id', protect, isAdmin, deleteHRUser);
+router.get('/hr-users',        protect, isHeadHR, getHRUsers);
+router.post('/hr-users',       protect, isAdmin,  createHRUser);
+router.delete('/hr-users/:id', protect, isAdmin,  deleteHRUser);
 
 module.exports = router;

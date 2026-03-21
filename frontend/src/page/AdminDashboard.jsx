@@ -480,6 +480,7 @@ const AdminDashboard = () => {
     const [bulkResult, setBulkResult] = useState(null);
     const [showBulkConfirm, setShowBulkConfirm] = useState(false);
     const [previewCourse, setPreviewCourse] = useState(null);
+    const [activeInterns, setActiveInterns] = useState([]);
 
     useEffect(() => {
         if (!user) { navigate('/login'); return; }
@@ -489,7 +490,7 @@ const AdminDashboard = () => {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const [statsRes, pendingInstRes, pendingCoursesRes, usersRes, coursesRes, certRes, unverifiedRes, contactsRes] = await Promise.all([
+            const [statsRes, pendingInstRes, pendingCoursesRes, usersRes, coursesRes, certRes, unverifiedRes, contactsRes, internsRes] = await Promise.all([
                 api.get('/admin/stats'),
                 api.get('/admin/instructors/pending'),
                 api.get('/admin/courses/pending'),
@@ -498,6 +499,7 @@ const AdminDashboard = () => {
                 api.get('/admin/student-certs'),
                 api.get('/admin/users/unverified'),
                 api.get('/contact'),
+                api.get('/internship/admin/all').catch(() => ({ data: [] })),
             ]);
             setStats(statsRes.data);
             setPendingInstructors(pendingInstRes.data);
@@ -507,6 +509,7 @@ const AdminDashboard = () => {
             setStudentCerts(certRes.data);
             setUnverifiedUsers(unverifiedRes.data.users || []);
             setContacts(contactsRes.data?.data || []);
+            setActiveInterns((internsRes.data || []).filter(a => ['enrolled', 'selected', 'offer_sent', 'completed'].includes(a.status)));
         } catch (err) { console.error(err); }
         setLoading(false);
     }, []);
@@ -570,6 +573,7 @@ const AdminDashboard = () => {
         { id: 'unverified',    label: 'Unverified',    icon: ShieldAlert, badge: unverifiedUsers.length },
         { id: 'student-certs', label: 'Student Certs', icon: Award,       badge: studentCerts.filter(c => c.status === 'pending').length },
         { id: 'hr-management', label: 'HR Management', icon: Briefcase },
+        { id: 'active-interns', label: 'Active Interns', icon: GraduationCap, badge: activeInterns.length || null },
         { id: 'analytics',     label: 'Analytics',     icon: TrendingUp },
     ];
 
@@ -935,6 +939,68 @@ const AdminDashboard = () => {
                     )}
 
 {activeTab === 'hr-management' && <HRManagement />}
+
+                    {/* ── ACTIVE INTERNS ── */}
+                    {activeTab === 'active-interns' && (
+                        <div className="space-y-5 max-w-6xl">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-900">Active Interns</h2>
+                                    <p className="text-sm text-gray-500 mt-0.5">{activeInterns.length} interns enrolled in TechiGuru programs.</p>
+                                </div>
+                            </div>
+                            {activeInterns.length === 0 ? (
+                                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                                    <GraduationCap size={36} className="mx-auto mb-3 text-gray-300" />
+                                    <p className="text-gray-500 font-medium">No active interns yet</p>
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead>
+                                                <tr className="bg-gray-50 text-xs text-gray-400 uppercase tracking-wider">
+                                                    <th className="px-5 py-3 text-left">Intern</th>
+                                                    <th className="px-5 py-3 text-left">Role</th>
+                                                    <th className="px-5 py-3 text-left">College</th>
+                                                    <th className="px-5 py-3 text-left">Sub HR</th>
+                                                    <th className="px-5 py-3 text-left">Status</th>
+                                                    <th className="px-5 py-3 text-left">Start Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-50">
+                                                {activeInterns.map(a => (
+                                                    <tr key={a._id} className="hover:bg-gray-50">
+                                                        <td className="px-5 py-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-sm">{(a.fullName || '?')[0].toUpperCase()}</div>
+                                                                <div>
+                                                                    <p className="font-semibold text-gray-800">{a.fullName}</p>
+                                                                    <p className="text-xs text-gray-400">{a.email}</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-5 py-3 text-gray-600 text-xs max-w-[120px] truncate">{a.role}</td>
+                                                        <td className="px-5 py-3 text-gray-500 text-xs max-w-[120px] truncate">{a.college}</td>
+                                                        <td className="px-5 py-3 text-xs">{a.subHR?.name || <span className="text-gray-300">Not assigned</span>}</td>
+                                                        <td className="px-5 py-3">
+                                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                                                                a.status === 'enrolled' ? 'bg-emerald-50 text-emerald-700' :
+                                                                a.status === 'selected' ? 'bg-green-50 text-green-700' :
+                                                                a.status === 'completed' ? 'bg-slate-50 text-slate-700' :
+                                                                'bg-teal-50 text-teal-700'
+                                                            }`}>{a.status}</span>
+                                                        </td>
+                                                        <td className="px-5 py-3 text-xs text-gray-400">{a.internshipStartDate ? new Date(a.internshipStartDate).toLocaleDateString('en-IN') : '—'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                     {/* ── ANALYTICS ── */}
                     {activeTab === 'analytics' && (
                         <div className="space-y-5 max-w-6xl">

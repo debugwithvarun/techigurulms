@@ -161,19 +161,29 @@ const ApplicationModal = ({ app, onClose, onAction, subHRList, loading }) => {
                                         ✓ Shortlist
                                     </button>
                                 )}
-                                {['pending', 'shortlisted', 'interviewed'].includes(app.status) && (
+                                {/* Mark as Interviewed (after interview is scheduled) */}
+                                {app.status === 'interview_scheduled' && (
+                                    <button onClick={() => onAction('mark_interviewed', app._id)}
+                                        disabled={loading}
+                                        className="px-4 py-2 bg-purple-600 text-white text-sm font-bold rounded-lg hover:bg-purple-700 disabled:opacity-50">
+                                        ✅ Mark as Interviewed
+                                    </button>
+                                )}
+                                {/* Reject — available for pending, shortlisted, interview_scheduled, interviewed */}
+                                {['pending', 'shortlisted', 'interview_scheduled', 'interviewed'].includes(app.status) && (
                                     <div className="flex gap-2 flex-1">
                                         <input value={rejectionReason} onChange={e => setRejectionReason(e.target.value)}
                                             placeholder="Rejection reason (optional)..."
                                             className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-red-400" />
-                                        <button onClick={() => onAction('reject', app._id, { reason: rejectionReason, stage: app.status === 'interviewed' ? 'post_interview' : 'application' })}
+                                        <button onClick={() => onAction('reject', app._id, { reason: rejectionReason, stage: ['interview_scheduled', 'interviewed'].includes(app.status) ? 'post_interview' : 'application' })}
                                             disabled={loading}
                                             className="px-4 py-2 bg-red-100 text-red-700 text-sm font-bold rounded-lg hover:bg-red-200 disabled:opacity-50">
                                             ✗ Reject
                                         </button>
                                     </div>
                                 )}
-                                {app.status === 'interviewed' && (
+                                {/* Select / Approve — after interview or interview_scheduled */}
+                                {['interview_scheduled', 'interviewed'].includes(app.status) && (
                                     <div className="flex gap-2 items-center flex-wrap">
                                         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
                                             className="px-3 py-2 text-sm border border-gray-200 rounded-lg" />
@@ -373,12 +383,6 @@ const HeadHRDashboard = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    useEffect(() => {
-        if (!user) { navigate('/login'); return; }
-        if (user.role !== 'headhr' && user.role !== 'admin') { navigate('/'); return; }
-        loadAll();
-    }, [user]);
-
     const loadAll = useCallback(async () => {
         setLoading(true);
         try {
@@ -394,12 +398,19 @@ const HeadHRDashboard = () => {
         setLoading(false);
     }, []);
 
+    useEffect(() => {
+        if (!user) { navigate('/login'); return; }
+        if (user.role !== 'headhr' && user.role !== 'admin') { navigate('/'); return; }
+        loadAll();
+    }, [user, navigate, loadAll]);
+
     const handleAction = useCallback(async (action, appId, payload = {}) => {
         setActionLoading(true);
         try {
             const endpoints = {
                 shortlist:           `/internship/${appId}/shortlist`,
                 schedule_interview:  `/internship/${appId}/schedule-interview`,
+                mark_interviewed:    `/internship/${appId}/mark-interviewed`,
                 reject:              `/internship/${appId}/reject`,
                 select:              `/internship/${appId}/select`,
                 assign_subhr:        `/internship/${appId}/assign-subhr`,

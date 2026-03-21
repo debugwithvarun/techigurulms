@@ -180,6 +180,21 @@ const rejectApplication = async (req, res) => {
   }
 };
 
+// PUT /api/internship/:id/mark-interviewed
+const markInterviewed = async (req, res) => {
+  try {
+    const app = await InternshipApplication.findByIdAndUpdate(
+      req.params.id,
+      { status: 'interviewed', headHR: req.user._id },
+      { new: true }
+    );
+    if (!app) return res.status(404).json({ message: 'Application not found' });
+    res.json({ message: 'Application marked as interviewed', application: app });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // PUT /api/internship/:id/select
 const selectCandidate = async (req, res) => {
   try {
@@ -735,6 +750,7 @@ module.exports = {
   scheduleInterview,
   rejectApplication,
   selectCandidate,
+  markInterviewed,
   assignSubHR,
   sendOfferLetter,
   approveCertificate,

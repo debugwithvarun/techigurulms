@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send, CheckCircle, AlertCircle, Loader2, Briefcase,
@@ -219,12 +219,80 @@ const ApplyForm = () => {
 };
 
 // ── Main InternshipPage ──────────────────────────────────────────────────────────
+const STATUS_COLORS = {
+  pending:            'bg-amber-400/10 text-amber-400 border-amber-400/20',
+  shortlisted:        'bg-blue-400/10 text-blue-400 border-blue-400/20',
+  interview_scheduled:'bg-violet-400/10 text-violet-400 border-violet-400/20',
+  interviewed:        'bg-purple-400/10 text-purple-400 border-purple-400/20',
+  selected:           'bg-green-400/10 text-green-400 border-green-400/20',
+  enrolled:           'bg-emerald-400/10 text-emerald-400 border-emerald-400/20',
+  rejected:           'bg-red-400/10 text-red-400 border-red-400/20',
+  completed:          'bg-slate-400/10 text-slate-400 border-slate-400/20',
+};
+const STATUS_LABELS = {
+  pending:            '⏳ Under Review',
+  shortlisted:        '✅ Shortlisted',
+  interview_scheduled:'📅 Interview Scheduled',
+  interviewed:        '🎤 Interviewed',
+  selected:           '🎉 Selected',
+  enrolled:           '🏢 Active Intern',
+  rejected:           '❌ Not Selected',
+  completed:          '🏆 Completed',
+};
+
 const InternshipPage = () => {
+  const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
+  const [myApps, setMyApps] = useState([]);
+
+  useEffect(() => {
+    if (!user) return;
+    api.get('/internship/my').then(res => setMyApps(res.data || [])).catch(() => {});
+  }, [user]);
 
   return (
     <div className="min-h-screen font-sans" style={{ background: '#05070f' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=Inter:wght@400;500;600&display=swap');`}</style>
+
+      {/* ── Past Applications Banner ──────────────────────────────────────── */}
+      {user && myApps.length > 0 && (
+        <div className="max-w-5xl mx-auto px-6 pt-28 pb-0">
+          <div className="rounded-2xl border border-white/[0.08] p-6" style={{ background: '#0d0f1e' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-1">Your Applications</p>
+                <h3 className="text-white font-black text-base" style={{ fontFamily: "'Syne', sans-serif" }}>Application History</h3>
+              </div>
+              <button onClick={() => setShowForm(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-xs font-bold transition-all">
+                <Briefcase size={13} /> Apply Again
+              </button>
+            </div>
+            <div className="space-y-3">
+              {myApps.map(a => (
+                <div key={a._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-white/[0.05]" style={{ background: '#080a16' }}>
+                  <div className="flex-1">
+                    <p className="font-bold text-white text-sm">{a.role}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Applied {new Date(a.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</p>
+                    {a.status === 'interview_scheduled' && a.interviewLink && (
+                      <p className="text-xs text-violet-300 mt-1">📎 <a href={a.interviewLink} target="_blank" rel="noopener noreferrer" className="underline">Join Interview</a> · {a.interviewScheduledAt ? new Date(a.interviewScheduledAt).toLocaleString('en-IN') : ''}</p>
+                    )}
+                    {a.status === 'rejected' && a.rejectionReason && (
+                      <p className="text-xs text-red-400 mt-1">Reason: {a.rejectionReason}</p>
+                    )}
+                    {a.subHR && (
+                      <p className="text-xs text-slate-500 mt-1">👤 Mentor: {a.subHR.name}</p>
+                    )}
+                  </div>
+                  <span className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border ${STATUS_COLORS[a.status] || 'bg-gray-400/10 text-gray-400 border-gray-400/20'}`}>
+                    {STATUS_LABELS[a.status] || a.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden pt-32 pb-28 px-6">
