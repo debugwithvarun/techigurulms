@@ -8,8 +8,8 @@
  *   Render:     'https://techiguru-backend.onrender.com'
  */
 // export const BACKEND_URL = 'http://13.127.138.86:5000';
-// export const BACKEND_URL = 'https://api.techiguru.in';
-export const BACKEND_URL = 'http://localhost:5000';
+export const BACKEND_URL = 'https://api.techiguru.in';
+// export const BACKEND_URL = 'http://localhost:5000';
 
 export const API_URL = `${BACKEND_URL}/api`;
 
