@@ -556,6 +556,7 @@ const Navbar = () => {
                     </div>
                   </>
                 ) : (
+                  
                   <>
                     {/* Show role dashboard links in mobile footer too */}
                     {profileItems.map(({ label, path, icon: Icon }) => (
