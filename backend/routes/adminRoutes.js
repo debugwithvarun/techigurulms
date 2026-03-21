@@ -1,49 +1,116 @@
+// // const express = require('express');
+// // const router = express.Router();
+// // const { protect } = require('../middleware/authMiddleware');
+// // const {
+// //     isAdmin,
+// //     getPendingInstructors, getAllInstructors, approveInstructor, rejectInstructor,
+// //     getPendingCourses, getAllCourses, approveCourse, rejectCourse,
+// //     getPlatformStats, getAllUsers,
+// //     getAllStudentCertificates, approveStudentCertificate, rejectStudentCertificate,
+// //     getUnverifiedUsers, resendVerificationLink, resendVerificationToAll
+// // } = require('../controllers/adminController');
+
+// // // All admin routes require login + admin check
+// // router.use(protect, isAdmin);
+
+// // // Stats
+// // router.get('/stats', getPlatformStats);
+
+// // // Users
+// // router.get('/users', getAllUsers);
+// // router.get('/users/unverified', getUnverifiedUsers);                          // List unverified accounts
+// // router.post('/users/resend-verification-all', resendVerificationToAll);       // Bulk send links to ALL unverified
+// // router.post('/users/:id/resend-verification', resendVerificationLink);        // Send link to one specific user
+
+// // // Instructors
+// // router.get('/instructors', getAllInstructors);
+// // router.get('/instructors/pending', getPendingInstructors);
+// // router.put('/instructors/:id/approve', approveInstructor);
+// // router.put('/instructors/:id/reject', rejectInstructor);
+
+// // // Courses
+// // router.get('/courses', getAllCourses);
+// // router.get('/courses/pending', getPendingCourses);
+// // router.put('/courses/:id/approve', approveCourse);
+// // router.put('/courses/:id/reject', rejectCourse);
+
+// // // Student Certificates
+// // router.get('/student-certs', getAllStudentCertificates);
+// // router.put('/student-certs/:id/approve', approveStudentCertificate);
+// // router.put('/student-certs/:id/reject', rejectStudentCertificate);
+
+// // module.exports = router;
+
+
 // const express = require('express');
-// const router = express.Router();
+// const router  = express.Router();
 // const { protect } = require('../middleware/authMiddleware');
 // const {
-//     isAdmin,
-//     getPendingInstructors, getAllInstructors, approveInstructor, rejectInstructor,
-//     getPendingCourses, getAllCourses, approveCourse, rejectCourse,
-//     getPlatformStats, getAllUsers,
-//     getAllStudentCertificates, approveStudentCertificate, rejectStudentCertificate,
-//     getUnverifiedUsers, resendVerificationLink, resendVerificationToAll
+//   isAdmin,
+//   getPlatformStats,
+//   getAllUsers,
+//   getUnverifiedUsers,
+//   resendVerificationLink,
+//   resendVerificationToAll,
+//   getAllInstructors,
+//   getPendingInstructors,
+//   approveInstructor,
+//   rejectInstructor,
+//   getAllCourses,
+//   getPendingCourses,
+//   approveCourse,
+//   rejectCourse,
+//   getAllStudentCertificates,
+//   approveStudentCertificate,
+//   rejectStudentCertificate,
+//   getLeaderboard,
+//   getHRUsers,
+//   createHRUser,
+//   deleteHRUser,
 // } = require('../controllers/adminController');
 
-// // All admin routes require login + admin check
+// // All admin routes require login + admin role check
 // router.use(protect, isAdmin);
 
-// // Stats
-// router.get('/stats', getPlatformStats);
+// // ── Stats ──────────────────────────────────────────────────────────────────────
+// router.get('/stats',       getPlatformStats);
+// router.get('/leaderboard', getLeaderboard);
 
-// // Users
-// router.get('/users', getAllUsers);
-// router.get('/users/unverified', getUnverifiedUsers);                          // List unverified accounts
-// router.post('/users/resend-verification-all', resendVerificationToAll);       // Bulk send links to ALL unverified
-// router.post('/users/:id/resend-verification', resendVerificationLink);        // Send link to one specific user
+// // ── Users ──────────────────────────────────────────────────────────────────────
+// router.get('/users',                           getAllUsers);
+// router.get('/users/unverified',                getUnverifiedUsers);
+// router.post('/users/resend-verification-all',  resendVerificationToAll);
+// router.post('/users/:id/resend-verification',  resendVerificationLink);
 
-// // Instructors
-// router.get('/instructors', getAllInstructors);
-// router.get('/instructors/pending', getPendingInstructors);
+// // ── Instructors ────────────────────────────────────────────────────────────────
+// router.get('/instructors',            getAllInstructors);
+// router.get('/instructors/pending',    getPendingInstructors);
 // router.put('/instructors/:id/approve', approveInstructor);
-// router.put('/instructors/:id/reject', rejectInstructor);
+// router.put('/instructors/:id/reject',  rejectInstructor);
 
-// // Courses
-// router.get('/courses', getAllCourses);
-// router.get('/courses/pending', getPendingCourses);
-// router.put('/courses/:id/approve', approveCourse);
-// router.put('/courses/:id/reject', rejectCourse);
+// // ── Courses ────────────────────────────────────────────────────────────────────
+// router.get('/courses',              getAllCourses);
+// router.get('/courses/pending',      getPendingCourses);
+// router.put('/courses/:id/approve',  approveCourse);
+// router.put('/courses/:id/reject',   rejectCourse);
 
-// // Student Certificates
-// router.get('/student-certs', getAllStudentCertificates);
-// router.put('/student-certs/:id/approve', approveStudentCertificate);
-// router.put('/student-certs/:id/reject', rejectStudentCertificate);
+// // ── Student Certificates ───────────────────────────────────────────────────────
+// router.get('/student-certs',                   getAllStudentCertificates);
+// router.put('/student-certs/:id/approve',       approveStudentCertificate);
+// router.put('/student-certs/:id/reject',        rejectStudentCertificate);
+
+// // ── HR User Management  ← NEW ──────────────────────────────────────────────────
+// // Create, list, and delete Head HR / Sub HR accounts
+// // The HRManagement frontend component calls these endpoints
+// router.get('/hr-users',         getHRUsers);
+// router.post('/hr-users',        createHRUser);
+// router.delete('/hr-users/:id',  deleteHRUser);
 
 // module.exports = router;
 
 
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const {
   isAdmin,
@@ -73,37 +140,39 @@ const {
 router.use(protect, isAdmin);
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
-router.get('/stats',       getPlatformStats);
+router.get('/stats', getPlatformStats);
 router.get('/leaderboard', getLeaderboard);
 
+// ── HR User Management ────────────────────────────────────────────────────────
+// ⚠️ MUST be declared before /users and any /:id routes to prevent Express
+// from treating "hr-users" as an ObjectId parameter in another model's route.
+router.get('/hr-users', getHRUsers);
+router.post('/hr-users', createHRUser);
+router.delete('/hr-users/:id', deleteHRUser);
+
 // ── Users ──────────────────────────────────────────────────────────────────────
-router.get('/users',                           getAllUsers);
-router.get('/users/unverified',                getUnverifiedUsers);
-router.post('/users/resend-verification-all',  resendVerificationToAll);
-router.post('/users/:id/resend-verification',  resendVerificationLink);
+// ⚠️ Static paths (/unverified, /resend-verification-all) MUST come before
+// the dynamic /users/:id route so Express doesn't treat them as ObjectIds.
+router.get('/users', getAllUsers);
+router.get('/users/unverified', getUnverifiedUsers);          // static — before /:id
+router.post('/users/resend-verification-all', resendVerificationToAll);     // static — before /:id
+router.post('/users/:id/resend-verification', resendVerificationLink);      // dynamic — must be last
 
 // ── Instructors ────────────────────────────────────────────────────────────────
-router.get('/instructors',            getAllInstructors);
-router.get('/instructors/pending',    getPendingInstructors);
+router.get('/instructors', getAllInstructors);
+router.get('/instructors/pending', getPendingInstructors);              // static — before /:id
 router.put('/instructors/:id/approve', approveInstructor);
-router.put('/instructors/:id/reject',  rejectInstructor);
+router.put('/instructors/:id/reject', rejectInstructor);
 
 // ── Courses ────────────────────────────────────────────────────────────────────
-router.get('/courses',              getAllCourses);
-router.get('/courses/pending',      getPendingCourses);
-router.put('/courses/:id/approve',  approveCourse);
-router.put('/courses/:id/reject',   rejectCourse);
+router.get('/courses', getAllCourses);
+router.get('/courses/pending', getPendingCourses);                      // static — before /:id
+router.put('/courses/:id/approve', approveCourse);
+router.put('/courses/:id/reject', rejectCourse);
 
 // ── Student Certificates ───────────────────────────────────────────────────────
-router.get('/student-certs',                   getAllStudentCertificates);
-router.put('/student-certs/:id/approve',       approveStudentCertificate);
-router.put('/student-certs/:id/reject',        rejectStudentCertificate);
-
-// ── HR User Management  ← NEW ──────────────────────────────────────────────────
-// Create, list, and delete Head HR / Sub HR accounts
-// The HRManagement frontend component calls these endpoints
-router.get('/hr-users',         getHRUsers);
-router.post('/hr-users',        createHRUser);
-router.delete('/hr-users/:id',  deleteHRUser);
+router.get('/student-certs', getAllStudentCertificates);
+router.put('/student-certs/:id/approve', approveStudentCertificate);
+router.put('/student-certs/:id/reject', rejectStudentCertificate);
 
 module.exports = router;
