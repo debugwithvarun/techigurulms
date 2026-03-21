@@ -102,7 +102,9 @@ router.put('/student-certs/:id/reject', rejectStudentCertificate);
 // ── HR User Management  ← NEW ──────────────────────────────────────────────────
 // Create, list, and delete Head HR / Sub HR accounts
 // The HRManagement frontend component calls these endpoints
-router.get('/hr-users', getHRUsers);
+router.get('/hr-users', () => {
+  console.log("hr users");
+}, getHRUsers);
 router.post('/hr-users', createHRUser);
 router.delete('/hr-users/:id', deleteHRUser);
 
