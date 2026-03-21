@@ -1,21 +1,21 @@
 const express = require('express');
-const dotenv  = require('dotenv');
-const cors    = require('cors');
-const path    = require('path');
-const fs      = require('fs');
+const dotenv = require('dotenv');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
 // --- Import Routes & Utils ---
-const authRoutes        = require('./routes/authRoutes');
-const courseRoutes      = require('./routes/courseRoutes');
+const authRoutes = require('./routes/authRoutes');
+const courseRoutes = require('./routes/courseRoutes');
 const certificateRoutes = require('./routes/certificateRoutes');
-const blogRoutes        = require('./routes/blogRoutes');
-const adminRoutes       = require('./routes/adminRoutes');
-const studentRoutes     = require('./routes/studentRoutes');
-const contactRoutes     = require('./routes/contactRoutes');
-const internshipRoutes  = require('./routes/internshipRoutes');
+const blogRoutes = require('./routes/blogRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+const internshipRoutes = require('./routes/internshipRoutes');
 
-const connectDB        = require('./config/db');
-const seedInstructors  = require('./utlis/Seeder');
+const connectDB = require('./config/db');
+const seedInstructors = require('./utlis/Seeder');
 
 dotenv.config();
 
@@ -65,14 +65,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- API Routes ---
-app.use('/api/auth',         authRoutes);
-app.use('/api/courses',      courseRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/courses', courseRoutes);
 app.use('/api/certificates', certificateRoutes);
-app.use('/api/blogs',        blogRoutes);
-app.use('/api/admin',        adminRoutes);
-app.use('/api/student',      studentRoutes);
-app.use('/api/contact',      contactRoutes);
-app.use('/api/internship',   internshipRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/internship', internshipRoutes);
 
 // --- Health check ---
 app.get('/', (req, res) => res.send('API is running...'));
